@@ -1,0 +1,7 @@
+
+# HubLaunch configuration
+hublaunch.config.js
+
+# HubLaunch worktrees
+.hula-worktrees/
+.env
