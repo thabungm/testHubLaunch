@@ -60,7 +60,13 @@ fi
 
 # ── Build comment body with @copilot mention ──────────────────────────────────
 
-COMMENT_TMP="/tmp/hula-verify-comment-${PR_NUMBER}.md"
+# Use mktemp for an unpredictable, exclusively-created temp file. A predictable
+# path like /tmp/hula-verify-comment-<PR>.md in world-writable /tmp lets a local
+# attacker pre-create a symlink there (the PR number is sequential and guessable)
+# and clobber an arbitrary victim-owned file via the redirect below (CWE-377).
+COMMENT_TMP=$(mktemp "${TMPDIR:-/tmp}/hula-verify-comment-${PR_NUMBER}-XXXXXX.md") \
+  || die 2 "Failed to create temporary file for the comment body."
+trap 'rm -f "$COMMENT_TMP"' EXIT
 
 {
   printf '@copilot Please review this verification report and address any gaps.\n\n'
