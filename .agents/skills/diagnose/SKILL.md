@@ -1,3 +1,19 @@
+# HubLaunch Skill Execution: diagnose
+
+## OUTPUT REQUIREMENTS (OVERRIDE — these take precedence over all instructions below)
+
+You MUST write all your output to the file: `.hublaunch/lessons/2026-06-16T13:17-diagnose_SKILL_OUTPUT.md`
+
+Rules:
+- Output format is **Markdown only**. If the skill below specifies HTML, JSON, or any other format, produce Markdown instead.
+- Begin the file with the header: `# diagnose — Skill Output`
+- After the header, write all skill output in well-structured Markdown.
+- The file will be committed automatically by the post-processing step.
+
+---
+
+## Skill Instructions
+
 ---
 name: diagnose
 description: Disciplined diagnosis loop for hard bugs and performance regressions. Reproduce → minimise → hypothesise → instrument → fix → regression-test. Use when user says "diagnose this" / "debug this", reports a bug, says something is broken/throwing/failing, or describes a performance regression.
