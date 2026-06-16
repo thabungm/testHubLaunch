@@ -1,0 +1,32 @@
+{
+  "version": "3.0",
+  "lastUpdated": "2026-06-08T10:21:49.158Z",
+  "plans": [
+    {
+      "name": "thabungm/testHubLaunch#3",
+      "trackingName": "contact page",
+      "number": 3,
+      "title": "Add Simple Contact Page (Static HTML Form)",
+      "planPath": ".hublaunch/plans/2026-06-08-15:00-add-contact-page.md",
+      "copilotAssigned": false,
+      "trackingStatus": "unassigned",
+      "priority": "Medium",
+      "createdAt": "2026-06-08T10:13:23Z",
+      "updatedAt": "2026-06-08T10:13:23Z",
+      "assignees": []
+    },
+    {
+      "name": "thabungm/testHubLaunch#4",
+      "trackingName": "aboutUs",
+      "number": 4,
+      "title": "Add Simple About Us Page (Static HTML)",
+      "planPath": ".hublaunch/plans/2026-06-08-16:00-add-about-us-page.md",
+      "copilotAssigned": false,
+      "trackingStatus": "unassigned",
+      "priority": "Medium",
+      "createdAt": "2026-06-08T10:21:25Z",
+      "updatedAt": "2026-06-08T10:21:25Z",
+      "assignees": []
+    }
+  ]
+}
