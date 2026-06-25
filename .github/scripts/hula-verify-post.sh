@@ -60,7 +60,9 @@ fi
 
 # ── Build comment body with @copilot mention ──────────────────────────────────
 
-COMMENT_TMP="/tmp/hula-verify-comment-${PR_NUMBER}.md"
+# Use mktemp (not a predictable /tmp path) to avoid symlink/clobbering attacks
+# in the world-writable temp dir (CWE-377 / CWE-59).
+COMMENT_TMP=$(mktemp "${TMPDIR:-/tmp}/hula-verify-comment-${PR_NUMBER}-XXXXXX.md")
 
 {
   printf '@copilot Please review this verification report and address any gaps.\n\n'
