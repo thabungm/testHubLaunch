@@ -54,6 +54,12 @@ if [[ -z "$COMMIT_MSG" ]]; then
   die 1 "Commit message is required."
 fi
 
+# Enforce a strictly-numeric issue number to prevent path traversal when building
+# the session file path and JSON injection in the emitted output.
+if [[ ! "$ISSUE_NUMBER" =~ ^[0-9]+$ ]]; then
+  die 1 "Invalid issue number: must be a positive integer."
+fi
+
 # ── Resolve worktree path ─────────────────────────────────────────────────────
 
 if [[ -z "$WORKTREE_PATH" ]]; then

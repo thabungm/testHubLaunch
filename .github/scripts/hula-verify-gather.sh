@@ -39,6 +39,12 @@ if [[ -z "$ISSUE_NUMBER" ]]; then
   die 1 "Usage: bash .github/scripts/hula-verify-gather.sh <issue-number>"
 fi
 
+# Enforce a strictly-numeric issue number (the `[0-9]*` glob only checks the
+# first character) to prevent JSON injection in the emitted output.
+if [[ ! "$ISSUE_NUMBER" =~ ^[0-9]+$ ]]; then
+  die 1 "Invalid issue number: must be a positive integer."
+fi
+
 # ── Step 2: Fetch issue details ────────────────────────────────────────────────
 
 printf '🔍 Fetching issue #%s...\n' "$ISSUE_NUMBER" >&2
@@ -113,7 +119,9 @@ done <<< "$FILES_LIST"
 
 printf '📄 Fetching PR diff...\n' >&2
 
-DIFF_FILE="/tmp/hula-verify-diff-${PR_NUMBER}.patch"
+# Use mktemp to avoid predictable paths in world-writable /tmp (symlink/TOCTOU).
+DIFF_FILE=$(mktemp "${TMPDIR:-/tmp}/hula-verify-diff-${PR_NUMBER}.XXXXXX") \
+  || die 2 "Failed to create temporary diff file."
 gh pr diff "$PR_NUMBER" > "$DIFF_FILE" 2>/dev/null \
   || printf '⚠️  Could not fetch PR diff (PR may be too large or not accessible)\n' >&2
 

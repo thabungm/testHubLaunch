@@ -54,13 +54,21 @@ if [[ -z "$REPORT_FILE" ]]; then
   die 1 "Report file path is required as second argument."
 fi
 
+# Enforce a strictly-numeric PR number (the `[0-9]*` glob only checks the first
+# character) to prevent JSON injection in the emitted output.
+if [[ ! "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
+  die 1 "Invalid PR number: must be a positive integer."
+fi
+
 if [[ ! -f "$REPORT_FILE" ]]; then
   die 1 "Report file not found: ${REPORT_FILE}"
 fi
 
 # ── Build comment body with @copilot mention ──────────────────────────────────
 
-COMMENT_TMP="/tmp/hula-verify-comment-${PR_NUMBER}.md"
+# Use mktemp to avoid predictable paths in world-writable /tmp (symlink/TOCTOU).
+COMMENT_TMP=$(mktemp "${TMPDIR:-/tmp}/hula-verify-comment-${PR_NUMBER}.XXXXXX") \
+  || die 2 "Failed to create temporary comment file."
 
 {
   printf '@copilot Please review this verification report and address any gaps.\n\n'

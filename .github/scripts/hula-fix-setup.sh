@@ -57,6 +57,13 @@ if [[ -z "$ISSUE_NUMBER" ]]; then
   die 1 "Usage: bash .github/scripts/hula-fix-setup.sh <issue-number> [--repo-root <path>]"
 fi
 
+# Enforce a strictly-numeric issue number. The `[0-9]*` glob above only checks the
+# first character, so reject anything with non-digit characters here to prevent
+# path traversal and JSON injection downstream.
+if [[ ! "$ISSUE_NUMBER" =~ ^[0-9]+$ ]]; then
+  die 1 "Invalid issue number: must be a positive integer."
+fi
+
 if [[ -n "$REPO_ROOT" ]]; then
   cd "$REPO_ROOT"
 fi

@@ -44,6 +44,12 @@ if [[ -z "$ISSUE_NUMBER" ]]; then
   die 1 "Usage: bash .github/scripts/hula-merge-remote.sh <issue-number> [--session-path <path>]"
 fi
 
+# Enforce a strictly-numeric issue number (the `[0-9]*` glob only checks the
+# first character) to prevent path traversal and JSON injection downstream.
+if [[ ! "$ISSUE_NUMBER" =~ ^[0-9]+$ ]]; then
+  die 1 "Invalid issue number: must be a positive integer."
+fi
+
 # ── Step B1: Merge the PR via hula CLI ───────────────────────────────────────
 
 printf '🔀 Merging PR for issue #%s (remote-only)...\n' "$ISSUE_NUMBER" >&2
