@@ -50,6 +50,12 @@ if [[ -z "$ISSUE_NUMBER" ]]; then
   die 1 "Usage: bash .github/scripts/hula-fix-commit.sh <issue-number> <commit-message> [--worktree-path <path>]"
 fi
 
+# Validate issue number is numeric — it is used to build file paths (session/worktree),
+# so reject anything non-numeric (prevents path traversal / injection).
+if [[ ! "$ISSUE_NUMBER" =~ ^[0-9]+$ ]]; then
+  die 1 "Invalid issue number: ${ISSUE_NUMBER}. Must be a positive integer."
+fi
+
 if [[ -z "$COMMIT_MSG" ]]; then
   die 1 "Commit message is required."
 fi

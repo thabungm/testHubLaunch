@@ -60,7 +60,12 @@ fi
 
 # ── Build comment body with @copilot mention ──────────────────────────────────
 
-COMMENT_TMP="/tmp/hula-verify-comment-${PR_NUMBER}.md"
+# Use mktemp to avoid predictable filenames in a world-writable directory
+# (prevents symlink attacks / info disclosure on multi-user hosts — CWE-377/CWE-59).
+COMMENT_TMP=$(mktemp "${TMPDIR:-/tmp}/hula-verify-comment-${PR_NUMBER}-XXXXXX.md") \
+  || die 2 "Failed to create temporary file for the comment body."
+# Ensure the temp file is removed even if a later step fails.
+trap 'rm -f "$COMMENT_TMP"' EXIT
 
 {
   printf '@copilot Please review this verification report and address any gaps.\n\n'
@@ -74,7 +79,7 @@ printf '📝 Posting verification report to PR #%s...\n' "$PR_NUMBER" >&2
 COMMENT_URL=$(gh pr comment "$PR_NUMBER" --body-file "$COMMENT_TMP" 2>/dev/null) \
   || die 2 "Failed to post comment to PR #${PR_NUMBER}. You can copy the report manually."
 
-rm -f "$COMMENT_TMP"
+# Cleanup handled by the EXIT trap.
 
 # ── Output result ─────────────────────────────────────────────────────────────
 

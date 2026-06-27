@@ -52,6 +52,12 @@ if [[ -z "$ISSUE_NUMBER" || -z "$WORKTREE_PATH" || -z "$COMMIT_MSG" ]]; then
   die 1 "Usage: bash .github/scripts/hula-merge-local.sh <issue-number> <worktree-path> <commit-message> [--skip-tests] [--dry-run]"
 fi
 
+# Validate issue number is numeric — it is embedded unquoted in JSON output and used
+# to build file paths, so reject anything non-numeric (prevents JSON/path injection).
+if [[ ! "$ISSUE_NUMBER" =~ ^[0-9]+$ ]]; then
+  die 1 "Invalid issue number: ${ISSUE_NUMBER}. Must be a positive integer."
+fi
+
 if [[ ! -d "$WORKTREE_PATH" ]]; then
   die 1 "Worktree not found at ${WORKTREE_PATH}."
 fi
