@@ -54,6 +54,12 @@ if [[ -z "$COMMIT_MSG" ]]; then
   die 1 "Commit message is required."
 fi
 
+# Strict numeric validation. ISSUE_NUMBER is used to build a file path and is
+# emitted into JSON output, so require a pure integer to prevent path/JSON injection.
+if [[ ! "$ISSUE_NUMBER" =~ ^[0-9]+$ ]]; then
+  die 1 "Invalid issue number (must be a positive integer): ${ISSUE_NUMBER}"
+fi
+
 # ── Resolve worktree path ─────────────────────────────────────────────────────
 
 if [[ -z "$WORKTREE_PATH" ]]; then

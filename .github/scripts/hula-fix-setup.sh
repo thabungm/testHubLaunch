@@ -57,6 +57,13 @@ if [[ -z "$ISSUE_NUMBER" ]]; then
   die 1 "Usage: bash .github/scripts/hula-fix-setup.sh <issue-number> [--repo-root <path>]"
 fi
 
+# Strict numeric validation. The case glob [0-9]* only checks the FIRST char,
+# so a value like '1") | env' would pass and be interpolated into the jq program
+# string below and emitted as raw JSON. Require a pure integer to prevent injection.
+if [[ ! "$ISSUE_NUMBER" =~ ^[0-9]+$ ]]; then
+  die 1 "Invalid issue number (must be a positive integer): ${ISSUE_NUMBER}"
+fi
+
 if [[ -n "$REPO_ROOT" ]]; then
   cd "$REPO_ROOT"
 fi

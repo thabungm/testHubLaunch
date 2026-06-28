@@ -50,6 +50,13 @@ if [[ -z "$PR_NUMBER" ]]; then
   die 1 "Usage: bash .github/scripts/hula-verify-post.sh <pr-number> <report-file>"
 fi
 
+# Strict numeric validation. The case glob [0-9]* only checks the FIRST char;
+# PR_NUMBER is used in a temp-file template and emitted as raw JSON, so require
+# a pure integer to prevent path/JSON injection.
+if [[ ! "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
+  die 1 "Invalid PR number (must be a positive integer): ${PR_NUMBER}"
+fi
+
 if [[ -z "$REPORT_FILE" ]]; then
   die 1 "Report file path is required as second argument."
 fi
@@ -60,7 +67,10 @@ fi
 
 # ── Build comment body with @copilot mention ──────────────────────────────────
 
-COMMENT_TMP="/tmp/hula-verify-comment-${PR_NUMBER}.md"
+# Use mktemp to avoid predictable temp paths (symlink/overwrite attacks in a
+# shared /tmp). The PR number is embedded only in the template suffix.
+COMMENT_TMP=$(mktemp "${TMPDIR:-/tmp}/hula-verify-comment-${PR_NUMBER}-XXXXXX.md") \
+  || die 2 "Failed to create temporary comment file."
 
 {
   printf '@copilot Please review this verification report and address any gaps.\n\n'
