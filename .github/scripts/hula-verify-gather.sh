@@ -113,7 +113,10 @@ done <<< "$FILES_LIST"
 
 printf '📄 Fetching PR diff...\n' >&2
 
-DIFF_FILE="/tmp/hula-verify-diff-${PR_NUMBER}.patch"
+# Use mktemp for an unpredictable path (avoids symlink/clobber attacks in the
+# world-writable /tmp; CWE-377). PR_NUMBER is numeric so it is safe in the template.
+DIFF_FILE=$(mktemp "${TMPDIR:-/tmp}/hula-verify-diff-${PR_NUMBER}-XXXXXX.patch") \
+  || die 2 "Failed to create temporary file for the PR diff."
 gh pr diff "$PR_NUMBER" > "$DIFF_FILE" 2>/dev/null \
   || printf '⚠️  Could not fetch PR diff (PR may be too large or not accessible)\n' >&2
 

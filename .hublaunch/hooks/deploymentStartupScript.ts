@@ -28,7 +28,19 @@ async function main() {
     process.exit(1);
   }
 
-  const context: HookContext = JSON.parse(contextJson);
+  let context: HookContext;
+  try {
+    context = JSON.parse(contextJson);
+  } catch {
+    console.error("Error: Context argument is not valid JSON");
+    process.exit(1);
+  }
+
+  if (!context || typeof context.deploymentUrl !== "string") {
+    console.error("Error: Context must include a 'deploymentUrl' string");
+    process.exit(1);
+  }
+
   console.log(`🚀 Starting preview for: ${context.deploymentUrl}`);
 
   // Browser headless mode: Use env var or default to visible
