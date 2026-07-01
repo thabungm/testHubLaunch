@@ -60,7 +60,13 @@ fi
 
 # ── Build comment body with @copilot mention ──────────────────────────────────
 
-COMMENT_TMP="/tmp/hula-verify-comment-${PR_NUMBER}.md"
+# Create the comment file with mktemp: an unpredictable name with 0600 perms in
+# a private temp dir. A predictable path in a shared /tmp would be vulnerable to
+# symlink attacks and would expose the report contents to other local users
+# (CWE-377/CWE-59). Clean it up on any exit, including error paths.
+COMMENT_TMP=$(mktemp "${TMPDIR:-/tmp}/hula-verify-comment-${PR_NUMBER}.XXXXXX") \
+  || die 2 "Failed to create secure temp file for PR comment."
+trap 'rm -f "$COMMENT_TMP"' EXIT
 
 {
   printf '@copilot Please review this verification report and address any gaps.\n\n'
