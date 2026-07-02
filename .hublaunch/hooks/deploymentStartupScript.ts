@@ -29,6 +29,25 @@ async function main() {
   }
 
   const context: HookContext = JSON.parse(contextJson);
+
+  // Validate the deployment URL is a well-formed http(s) URL before navigating.
+  // This script fills TEST_USER_EMAIL / TEST_USER_PASSWORD into the loaded page,
+  // so a file://, javascript:, or otherwise attacker-controlled URL could exfiltrate
+  // those credentials or execute in an unexpected context.
+  let deploymentUrl: URL;
+  try {
+    deploymentUrl = new URL(context.deploymentUrl);
+  } catch {
+    console.error(`Error: Invalid deployment URL: ${context.deploymentUrl}`);
+    process.exit(1);
+  }
+  if (deploymentUrl.protocol !== "http:" && deploymentUrl.protocol !== "https:") {
+    console.error(
+      `Error: Refusing to open non-http(s) deployment URL: ${context.deploymentUrl}`
+    );
+    process.exit(1);
+  }
+
   console.log(`🚀 Starting preview for: ${context.deploymentUrl}`);
 
   // Browser headless mode: Use env var or default to visible
