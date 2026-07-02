@@ -39,6 +39,13 @@ if [[ -z "$ISSUE_NUMBER" ]]; then
   die 1 "Usage: bash .github/scripts/hula-verify-gather.sh <issue-number>"
 fi
 
+# Enforce a strictly numeric issue number. It is interpolated into a jq program
+# string and emitted unquoted into structured JSON, so a non-numeric value would
+# allow jq-expression / JSON injection.
+if [[ ! "$ISSUE_NUMBER" =~ ^[0-9]+$ ]]; then
+  die 1 "Invalid issue number (must be a positive integer): ${ISSUE_NUMBER}"
+fi
+
 # ── Step 2: Fetch issue details ────────────────────────────────────────────────
 
 printf '🔍 Fetching issue #%s...\n' "$ISSUE_NUMBER" >&2
