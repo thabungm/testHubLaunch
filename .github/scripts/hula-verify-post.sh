@@ -50,6 +50,10 @@ if [[ -z "$PR_NUMBER" ]]; then
   die 1 "Usage: bash .github/scripts/hula-verify-post.sh <pr-number> <report-file>"
 fi
 
+if [[ ! "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
+  die 1 "Invalid PR number (must be a positive integer): ${PR_NUMBER}"
+fi
+
 if [[ -z "$REPORT_FILE" ]]; then
   die 1 "Report file path is required as second argument."
 fi
