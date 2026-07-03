@@ -113,7 +113,11 @@ done <<< "$FILES_LIST"
 
 printf '📄 Fetching PR diff...\n' >&2
 
-DIFF_FILE="/tmp/hula-verify-diff-${PR_NUMBER}.patch"
+# Use mktemp so the path is unpredictable — a predictable name in the
+# world-writable /tmp lets a local attacker pre-create a symlink and hijack
+# the redirect (CWE-377 / CWE-59: insecure temp file / symlink following).
+DIFF_FILE=$(mktemp "${TMPDIR:-/tmp}/hula-verify-diff-${PR_NUMBER}-XXXXXX.patch") \
+  || die 2 "Failed to create a temporary file for the PR diff."
 gh pr diff "$PR_NUMBER" > "$DIFF_FILE" 2>/dev/null \
   || printf '⚠️  Could not fetch PR diff (PR may be too large or not accessible)\n' >&2
 
