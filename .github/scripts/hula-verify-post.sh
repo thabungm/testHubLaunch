@@ -60,7 +60,11 @@ fi
 
 # ── Build comment body with @copilot mention ──────────────────────────────────
 
-COMMENT_TMP="/tmp/hula-verify-comment-${PR_NUMBER}.md"
+# Use mktemp for an unpredictable, mode-600 temp file. A fixed name like
+# /tmp/hula-verify-comment-<PR>.md is predictable and world-readable, enabling
+# symlink-clobber attacks and report disclosure on a shared host (CWE-377/CWE-59).
+COMMENT_TMP=$(mktemp "${TMPDIR:-/tmp}/hula-verify-comment-${PR_NUMBER}-XXXXXX.md") \
+  || die 2 "Failed to create temporary file for the comment body."
 
 {
   printf '@copilot Please review this verification report and address any gaps.\n\n'

@@ -113,7 +113,11 @@ done <<< "$FILES_LIST"
 
 printf '📄 Fetching PR diff...\n' >&2
 
-DIFF_FILE="/tmp/hula-verify-diff-${PR_NUMBER}.patch"
+# Use mktemp for an unpredictable, mode-600 temp file. A fixed name like
+# /tmp/hula-verify-diff-<PR>.patch is predictable and world-readable, enabling
+# symlink-clobber attacks and diff disclosure on a shared host (CWE-377/CWE-59).
+DIFF_FILE=$(mktemp "${TMPDIR:-/tmp}/hula-verify-diff-${PR_NUMBER}-XXXXXX.patch") \
+  || die 2 "Failed to create temporary file for PR diff."
 gh pr diff "$PR_NUMBER" > "$DIFF_FILE" 2>/dev/null \
   || printf '⚠️  Could not fetch PR diff (PR may be too large or not accessible)\n' >&2
 
