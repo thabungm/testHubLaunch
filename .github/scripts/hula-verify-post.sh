@@ -60,7 +60,10 @@ fi
 
 # ── Build comment body with @copilot mention ──────────────────────────────────
 
-COMMENT_TMP="/tmp/hula-verify-comment-${PR_NUMBER}.md"
+# Create the temp file securely (mktemp: mode 0600, O_EXCL) to avoid a
+# symlink/pre-creation attack on the predictable /tmp path (CWE-377).
+COMMENT_TMP=$(mktemp "${TMPDIR:-/tmp}/hula-verify-comment-${PR_NUMBER}.XXXXXX") \
+  || die 2 "Failed to create temporary file for the comment body."
 
 {
   printf '@copilot Please review this verification report and address any gaps.\n\n'
