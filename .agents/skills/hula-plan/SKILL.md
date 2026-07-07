@@ -145,4 +145,4 @@ Read `.hublaunch/proceed-instructions.md` and execute the full validation workfl
 
   where `<path>` is the plan file path.
 
-**Note:** The plan is created locally and will need to be uploaded to origin/main before launching. The `/hula-upload` command will handle this seamlessly (stash, switch, commit, push, restore). `/hula-confirm` remains available as a standalone command for re-validation at any time.
+**Note:** The plan is saved locally. When you run `/hula-launch`, the plan is automatically synced to `origin/main` before the GitHub issue is created and the implementation begins — no separate upload step needed. `/hula-confirm` remains available as a standalone command for re-validation at any time.

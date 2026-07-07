@@ -48,9 +48,9 @@ User input: $ARGUMENTS
 - If found, extract and use this issue number
 
 **Priority 2: Check chat history for automatic detection**
-- Look for previous `/hula-create` output in THIS chat
-- Parse text like: "Created issue YizYah/hub-launch#42"
-- Also check HTML comment: `<!-- hula-issue: 42 -->`
+- Look for previous `/hula-launch` output in THIS chat (also recognize legacy `/hula-create` output)
+- Parse text like: "Launched issue YizYah/hub-launch#42" or "Created issue YizYah/hub-launch#42"
+- Also check HTML comment: `<!-- hula-issue: 42 -->` (emitted by both `/hula-launch` and `/hula-create`)
 
 **If no issue found**:
 ```

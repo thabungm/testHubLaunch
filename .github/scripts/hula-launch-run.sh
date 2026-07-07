@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # hula-launch-run.sh — Step 4 of the hula.launch workflow
-# Usage: bash .github/scripts/hula-launch-run.sh <plan-path> <branch-name> [--handoff <username>]
+# Usage: bash .github/scripts/hula-launch-run.sh <plan-path> <branch-name> [--handoff <username>] [--test]
 #
 # Performs: hula launch (which handles plan upload automatically)
 # Outputs structured JSON to stdout; all other output goes to stderr.
@@ -36,6 +36,7 @@ die() {
 PLAN_PATH=''
 BRANCH_NAME=''
 HANDOFF=''
+TEST=''
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -43,6 +44,8 @@ while [[ $# -gt 0 ]]; do
       HANDOFF="$2"; shift 2 ;;
     --handoff=*)
       HANDOFF="${1#--handoff=}"; shift ;;
+    --test)
+      TEST=1; shift ;;
     *)
       if [[ -z "$PLAN_PATH" ]]; then
         PLAN_PATH="$1"
@@ -56,11 +59,7 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [[ -z "$PLAN_PATH" || -z "$BRANCH_NAME" ]]; then
-  die 1 "Usage: bash .github/scripts/hula-launch-run.sh <plan-path> <branch-name> [--handoff <username>]"
-fi
-
-if [[ ! -f "$PLAN_PATH" ]]; then
-  die 1 "Plan file not found: ${PLAN_PATH}"
+  die 1 "Usage: bash .github/scripts/hula-launch-run.sh <plan-path> <branch-name> [--handoff <username>] [--test]"
 fi
 
 # Reject paths with directory traversal sequences
@@ -72,13 +71,17 @@ fi
 
 printf '🚀 Launching issue from plan: %s\n' "$PLAN_PATH" >&2
 
+# Build the launch invocation as an args array so --handoff and --test compose
+# without combinatorial if/else branching.
+LAUNCH_ARGS=("$BRANCH_NAME" "$PLAN_PATH")
 if [[ -n "$HANDOFF" ]]; then
-  LAUNCH_OUTPUT=$(hula launch "$BRANCH_NAME" "$PLAN_PATH" --handoff "$HANDOFF" 2>&1) \
-    || die 2 "Launch failed: $LAUNCH_OUTPUT"
-else
-  LAUNCH_OUTPUT=$(hula launch "$BRANCH_NAME" "$PLAN_PATH" 2>&1) \
-    || die 2 "Launch failed: $LAUNCH_OUTPUT"
+  LAUNCH_ARGS+=(--handoff "$HANDOFF")
 fi
+if [[ -n "$TEST" ]]; then
+  LAUNCH_ARGS+=(--test)
+fi
+LAUNCH_OUTPUT=$(hula launch "${LAUNCH_ARGS[@]}" 2>&1) \
+  || die 2 "Launch failed: $LAUNCH_OUTPUT"
 
 # Extract issue number from CLI output (e.g. "Created issue #42" or "issue #42")
 ISSUE_NUMBER=$(printf '%s' "$LAUNCH_OUTPUT" | grep -oE '#[0-9]+' | head -1 | tr -d '#') || true

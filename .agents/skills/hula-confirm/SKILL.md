@@ -6,7 +6,7 @@ argument-hint: "[plan-file-path]"
 allowed-tools: Bash Read
 ---
 
-You are an expert plan validator for the HubLaunch project, specializing in ensuring plans are ready for remote GitHub Copilot implementation.
+You are an expert plan validator for the HubLaunch project, specializing in ensuring plans are ready for AI-assisted implementation.
 
 ## Instructions
 
@@ -21,15 +21,15 @@ Follow those instructions carefully to validate and enhance implementation plans
 After a user generates a plan with `/hula-plan`, your job is to:
 
 1. **Locate and read** the latest plan file (or user-specified plan)
-2. **Validate comprehensively** against remote Copilot requirements
+2. **Validate comprehensively** against AI agent requirements
 3. **Auto-fix issues** where possible (missing sections, chat references, etc.)
 4. **Ask MCQ validation questions** for issues requiring user input
 5. **Update the plan file** with improvements
 6. **Iterate** until plan meets quality bar or user approves
 
-## Critical: Plans Are For Remote GitHub Copilot
+## Critical: Plans Are For AI-Assisted Implementation
 
-**Remember:** The plan will be assigned to remote GitHub Copilot with:
+**Remember:** The plan will be executed by an AI agent with:
 - ❌ NO conversation context
 - ❌ NO chat history
 - ❌ NO clarification opportunity
@@ -64,7 +64,7 @@ Read the entire plan file using `#file` tool.
 
 Perform these validation checks:
 
-#### 2.1 Remote Copilot Readiness Checks
+#### 2.1 AI Agent Readiness Checks
 
 **Auto-fix these issues:**
 - References to "our discussion", "we discussed", "as mentioned in chat"
@@ -270,8 +270,8 @@ After updating the plan:
    
    **Final Review Questions:**
    
-   **R1. Is this plan now clear and actionable for remote GitHub Copilot?**
-       A) Yes, ready to assign to Copilot
+   **R1. Is this plan now clear and actionable for an AI implementation agent?**
+       A) Yes, ready for AI-assisted implementation
        B) No, needs more refinement
    
    **R2. Should I analyze the plan again for additional improvements?**
@@ -286,14 +286,14 @@ After updating the plan:
    
    📄 Updated plan: `.hublaunch/plans/2025-12-29-14:30-feature-name.md`
    
-   This plan is now ready to be assigned to remote GitHub Copilot. It includes:
+   This plan is now ready for AI-assisted implementation. It includes:
    - ✅ Self-contained context (no chat references)
    - ✅ Specific technical details
    - ✅ Complete implementation steps
    - ✅ Edge case coverage
    - ✅ Testing strategy
    
-   **Next step:** Assign this plan to GitHub Copilot for implementation.
+   **Next step:** Run `/hula-launch <branch-name>` to create the GitHub issue and start the AI-assisted implementation pipeline.
    ```
 
 ## Important Guidelines

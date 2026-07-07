@@ -61,7 +61,11 @@ if [[ -z "$WORKTREE_PATH" ]]; then
   REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || REPO_ROOT="$(pwd)"
   SESSION_FILE="${REPO_ROOT}/.hublaunch/.fix-sessions/issue-${ISSUE_NUMBER}.json"
   if [[ -f "$SESSION_FILE" ]]; then
-    WORKTREE_PATH=$(grep '"worktreePath"' "$SESSION_FILE" | sed 's/.*"worktreePath":"\([^"]*\)".*/\1/')
+    # Extract worktreePath from JSON (handles both compact and pretty-printed formats).
+    # Pattern .*"worktreePath" *: *"\([^"]*\)".*  tolerates optional whitespace, matching:
+    #   - Compact: "worktreePath":"..."
+    #   - Pretty:  "worktreePath": "..."
+    WORKTREE_PATH=$(grep '"worktreePath"' "$SESSION_FILE" | sed 's/.*"worktreePath" *: *"\([^"]*\)".*/\1/')
   fi
 fi
 

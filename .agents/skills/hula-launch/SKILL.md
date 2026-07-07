@@ -2,7 +2,7 @@
 name: hula-launch
 description: Launch a GitHub issue from the current plan. Use when the user asks to launch or assign the plan to a remote agent.
 disable-model-invocation: true
-argument-hint: <branch-name> [<plan-path>]
+argument-hint: <branch-name> [<plan-path>] [--handoff <username>] [--test]
 allowed-tools: Bash Read
 ---
 
@@ -14,10 +14,11 @@ From `$ARGUMENTS`:
 - **Branch name** (required): the first word (e.g., `feature-auth`).
 - **Plan path** (optional): the second word, if present (e.g., `.hublaunch/plans/2026-06-10-14:00-feature-auth.md`).
 - **--handoff** (optional): a `--handoff <username>` flag anywhere in `$ARGUMENTS`.
+- **--test** (optional): the bare flag `--test`, anywhere in `$ARGUMENTS`. Sets test mode (server uses a mock Claude — fast E2E run; a real PR is still created).
 
 If no branch name is provided, stop with:
 ```
-❌ Branch name required. Usage: /hula-launch <branch-name> [<plan-path>] [--handoff <username>]
+❌ Branch name required. Usage: /hula-launch <branch-name> [<plan-path>] [--handoff <username>] [--test]
 ```
 
 If no plan path was given in `$ARGUMENTS`, look in the current chat history for the HTML comment:
@@ -45,6 +46,18 @@ With handoff:
 bash .github/scripts/hula-launch-run.sh <plan-path> <branch-name> --handoff <username>
 ```
 
+With test mode:
+```bash
+bash .github/scripts/hula-launch-run.sh <plan-path> <branch-name> --test
+```
+
+With handoff + test mode:
+```bash
+bash .github/scripts/hula-launch-run.sh <plan-path> <branch-name> --handoff <username> --test
+```
+
+Append `--test` whenever the user passed it; it composes with `--handoff`.
+
 ## Step 3: Show the result
 
 Parse the JSON output from the script:
@@ -68,6 +81,6 @@ Parse the JSON output from the script:
 
 ## Important Notes
 
-- Do NOT call the `Read` tool to check if the plan file exists. The script validates file existence and reports errors clearly.
+- Do NOT call the `Read` tool to check if the plan file exists. The `hula launch` CLI validates file existence (locally and on `origin/main`) and reports errors clearly.
 - Do NOT run `hula upload` separately. `hula launch` handles upload automatically.
 - This command is typically run after `/hula-plan` and `/hula-confirm`.
