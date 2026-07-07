@@ -1,8 +1,8 @@
-# Execute Skill Creation Instructions
+# Schedule Skill Creation Instructions
 
 These instructions drive the **create-from-description** mode of the
-`/hula-execute` skill: turning a plain-language description into a published
-action file that `hula execute` can run or schedule.
+`/hula-schedule` skill: turning a plain-language description into a published
+action file that `hula schedule` can run or schedule.
 
 The action file is plain instruction markdown that the hula-project server reads
 from `origin/<uploadBranch>` (default `main`) at run time. It is **not** an Agent
@@ -10,7 +10,7 @@ Skill and is never registered as a slash command — it lives under
 `.hublaunch/skills/`.
 
 Follow these steps in order. Do **not** skip the question step, and do **not**
-run `hula execute` before the file is successfully published.
+run `hula schedule` before the file is successfully published.
 
 ## Step 1: Ask clarifying questions first (then STOP)
 
@@ -88,13 +88,13 @@ branch at run time (and re-reads it on every scheduled fire). The file MUST be o
 the branch before the run, so publish it first:
 
 ```bash
-bash .github/scripts/hula-execute-manage.sh --publish-skill .hublaunch/skills/<filename>
+bash .github/scripts/hula-schedule-manage.sh --publish-skill .hublaunch/skills/<filename>
 ```
 
 Parse the single JSON object it prints:
 
 - If `status` is `"error"`: display `❌ <message>` and **STOP**. Do **not** run
-  `hula execute` — the file is not on the branch, so the run would fail.
+  `hula schedule` — the file is not on the branch, so the run would fail.
 - If `status` is `"success"`: continue to Step 7.
 
 ## Step 7: Run or schedule the action
@@ -103,7 +103,7 @@ Only after a successful publish, invoke the run wrapper with `--action-path`
 pointing at the committed file:
 
 ```bash
-bash .github/scripts/hula-execute-run.sh --action-path .hublaunch/skills/<filename> [--entry-point <path>] [--outcome-type <type>] [--schedule "<cron>"]
+bash .github/scripts/hula-schedule-run.sh --action-path .hublaunch/skills/<filename> [--entry-point <path>] [--outcome-type <type>] [--schedule "<cron>"]
 ```
 
 Pass only the flags you resolved. Quote the cron expression.
@@ -116,10 +116,10 @@ Parse the run wrapper's JSON (same contract as the normal run flow) and report:
   published to `origin/<uploadBranch>`.
 - The **run or schedule result**:
   - One-off run → the Run ID and PR link (if any), plus
-    `hula execute --show <runId>` to check status.
+    `hula schedule --show <runId>` to check status.
   - Schedule → the Schedule ID and cron expression, plus a note that you can
-    manage it with `/hula-execute list`, `/hula-execute run now <id>`,
-    `/hula-execute cancel <id>`, or `/hula-execute update <id> …`.
+    manage it with `/hula-schedule list`, `/hula-schedule run now <id>`,
+    `/hula-schedule cancel <id>`, or `/hula-schedule update <id> …`.
 
 Example success report:
 
@@ -130,7 +130,7 @@ Example success report:
 🔖 **Schedule ID**: sch_abc123
 ⏰ **Cron**: 0 3 * * * (every day at 3:00 AM)
 
-Manage it with: /hula-execute list · /hula-execute run now sch_abc123 · /hula-execute cancel sch_abc123
+Manage it with: /hula-schedule list · /hula-schedule run now sch_abc123 · /hula-schedule cancel sch_abc123
 ```
 
 ## Notes
@@ -139,4 +139,4 @@ Manage it with: /hula-execute list · /hula-execute run now sch_abc123 · /hula-
 - The action file is committed to `origin/<uploadBranch>` via a temporary
   worktree — the user's current branch and working tree are never touched.
 - If the publish succeeds but the run fails, the file remains on the branch; the
-  user can re-run it later with `/hula-execute .hublaunch/skills/<filename>`.
+  user can re-run it later with `/hula-schedule .hublaunch/skills/<filename>`.

@@ -9,7 +9,7 @@ allowed-tools: Bash Read
 You are an expert PR merger for the HubLaunch project. You handle two scenarios automatically:
 
 - **Local session merge**: A `/hula-fix` session exists with a local worktree — commit, push, merge, then clean up.
-- **Remote-only merge**: No local session/worktree (e.g. PR was created by GitHub Copilot coding agent, another contributor, or a previous session was cleaned up) — merge the PR directly via GitHub.
+- **Remote-only merge**: No local session/worktree (e.g. the PR was created remotely by the implementation agent via `/hula-launch`, by another contributor, or a previous session was cleaned up) — merge the PR directly via GitHub.
 
 You detect which path to take automatically. The user never needs to specify.
 
@@ -199,10 +199,10 @@ Main working tree was never modified. You're ready for the next task!
 
 Follow this path when no local fix session/worktree exists. This is the common path when:
 
-- GitHub Copilot coding agent created and worked on the PR
+- The implementation agent (Claude Code via `/hula-launch`) created and worked on the PR remotely
 - Another contributor submitted the PR
 - A previous `/hula-fix` session was already cleaned up
-- The user ran `/hula-create` with Copilot assignment
+- The user ran the legacy `/hula-create` flow
 
 ### Step B1: Remote-Only Merge and Cleanup (Script)
 
@@ -212,16 +212,42 @@ Run the remote-merge script — it merges the PR directly on GitHub and cleans u
 bash .github/scripts/hula-merge-remote.sh <issue-number>
 ```
 
-The script outputs JSON with `status`, `issueNumber`, and `sessionCleaned`.
+The script outputs JSON with `status`, `issueNumber`, `sessionCleaned`, and `localUpdated`.
+
+The script captures the `hula merge` CLI output and streams it to your terminal,
+so the **specific reason and remediation** for any skipped local update appears
+above the JSON line. Read it — that's the source of truth for what happened.
 
 Parse the JSON output:
 - If `status` is `"error"`, display the `message` and stop.
-- If `status` is `"success"`, proceed to Step B2.
+- If `status` is `"success"`, proceed through the display below, then Step B2a.
 
 Display:
 - If `sessionCleaned` is `true`: `🧹 Cleaned up stale session file`
+- Based on the `localUpdated` field:
+  - If `localUpdated` is `true`:
+    ```
+    ✓ Local main updated to latest origin
+    ```
+  - If `localUpdated` is `false`:
+    ```
+    ⚠️  Could not update local main (uncommitted changes, different branch, or git config issue)
+    See the output above for the specific reason and how to fix it.
+    ```
 
-### Step B2: Delete Local Branch (if applicable)
+### Step B2a: About Local Main Update
+
+The local main branch may not be fast-forwarded after the remote merge if:
+
+- Your project root has uncommitted changes (skipped to avoid disrupting your work)
+- Your project root is checked out on a different branch (not the default)
+- The git repository has a non-standard/multi-worktree configuration
+- `git pull --ff-only` could not fast-forward (e.g. network issue or diverged history)
+
+This is non-critical — the PR is already merged on GitHub. When skipped, the CLI
+output above shows the exact reason and the command to run to fix it.
+
+### Step B2b: Delete Local Branch (if applicable)
 
 Check whether the branch exists locally:
 
@@ -252,6 +278,9 @@ Display: `ℹ️  No local branch to clean up`
 
 ### Step B3: Success Summary
 
+Tailor the summary to what actually happened — in particular, the local main
+line depends on the `localUpdated` field from Step B1.
+
 ```
 ✨ Merge completed successfully!
 
@@ -259,6 +288,8 @@ Summary:
 - Merged PR for issue #42 on GitHub ✅
 - Closed issue #42 ✅
 - Deleted local branch: <prBranch> ✅  (or: No local branch to clean up)
+- [IF localUpdated == true]  Local main updated to latest origin ✅
+- [IF localUpdated == false] ⚠️  Local main was NOT updated — see the reason above.
 
 No local worktree was involved — PR was merged directly on GitHub.
 ```
@@ -332,7 +363,7 @@ The merge command automatically detects whether to use the local worktree path o
 This covers all scenarios:
 
 - `/hula-fix` → `/hula-merge` on the same machine (Path A)
-- Copilot coding agent created the PR on GitHub (Path B)
+- The implementation agent created the PR on GitHub via `/hula-launch` (Path B)
 - Another contributor's PR (Path B)
 - Previous fix session already cleaned up (Path B)
 
@@ -381,6 +412,7 @@ On failure, the worktree is preserved so you can:
 - ✅ Path B: PR merged directly on GitHub without any local branch/worktree operations
 - ✅ Path B: Stale session files cleaned up if present
 - ✅ Path B: Local branch deleted if it existed locally
+- ✅ Path B: Local main update status reported accurately (updated, or skipped with reason)
 - ✅ PR merged successfully (both paths)
 - ✅ Issue closed automatically (both paths)
 - ✅ Main working tree never modified (both paths)

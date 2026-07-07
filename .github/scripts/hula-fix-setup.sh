@@ -24,7 +24,9 @@ die() {
 }
 
 emit_json() {
-  # emit_json key value [key value ...]  — values are already JSON-safe strings
+  # emit_json key value [key value ...]
+  # Outputs compact single-line JSON: {"key":"value",...}
+  # All values must already be JSON-safe (escaped via json_escape).
   local out='{'
   local sep=''
   while [[ $# -ge 2 ]]; do
@@ -131,8 +133,13 @@ STARTED_AT=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z" 2>/dev/null || date -u +"%Y-%m-%d
 SESSION_FILE="${SESSION_DIR}/issue-${ISSUE_NUMBER}.json"
 SAFE_WT_SESSION=$(json_escape "$WORKTREE_PATH")
 SAFE_BR_SESSION=$(json_escape "$PR_BRANCH")
-printf '{\n  "issueNumber": %s,\n  "worktreePath": "%s",\n  "prBranch": "%s",\n  "startedAt": "%s"\n}\n' \
-  "$ISSUE_NUMBER" "$SAFE_WT_SESSION" "$SAFE_BR_SESSION" "$STARTED_AT" > "$SESSION_FILE"
+# Write compact single-line JSON via emit_json so the session file format matches
+# what readers (hula-fix-commit.sh) expect. Avoids the pretty-printed/compact mismatch.
+emit_json \
+  "issueNumber" "$ISSUE_NUMBER" \
+  "worktreePath" "$SAFE_WT_SESSION" \
+  "prBranch" "$SAFE_BR_SESSION" \
+  "startedAt" "$STARTED_AT" > "$SESSION_FILE"
 
 # ── Output result ─────────────────────────────────────────────────────────────
 

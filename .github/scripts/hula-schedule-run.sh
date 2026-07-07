@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# hula-execute-run.sh — runs the hula.execute workflow for the /hula-execute skill
+# hula-schedule-run.sh — runs the hula schedule workflow for the /hula-schedule skill
 # Usage:
-#   bash .github/scripts/hula-execute-run.sh \
+#   bash .github/scripts/hula-schedule-run.sh \
 #     (--built-in <name> | --action-path <path>) \
 #     [--entry-point <path>] [--outcome-type <pr|plan|feedback>] [--schedule "<cron>"] \
 #     [--pr-policy <always|skip-if-open|close-previous>] [--update-notification-url <url>]
 #
-# Performs: hula execute (one-off run, or a recurring schedule when --schedule is given).
+# Performs: hula schedule (one-off run, or a recurring schedule when --schedule is given).
 # Outputs a single structured JSON object to stdout; all other output goes to stderr.
 #
 # JSON contract (stdout):
@@ -79,7 +79,7 @@ if [[ -n "$BUILT_IN" && -n "$ACTION_PATH" ]]; then
   die 1 "Provide either --built-in or --action-path, not both."
 fi
 if [[ -z "$BUILT_IN" && -z "$ACTION_PATH" ]]; then
-  die 1 "Usage: bash .github/scripts/hula-execute-run.sh (--built-in <name> | --action-path <path>) [--entry-point <path>] [--outcome-type <pr|plan|feedback>] [--schedule \"<cron>\"] [--pr-policy <always|skip-if-open|close-previous>]"
+  die 1 "Usage: bash .github/scripts/hula-schedule-run.sh (--built-in <name> | --action-path <path>) [--entry-point <path>] [--outcome-type <pr|plan|feedback>] [--schedule \"<cron>\"] [--pr-policy <always|skip-if-open|close-previous>]"
 fi
 
 # Reject directory-traversal in --action-path, except for https:// URLs.
@@ -89,7 +89,7 @@ if [[ -n "$ACTION_PATH" ]] && [[ "$ACTION_PATH" != https://* ]]; then
   fi
 fi
 
-# ── Run hula execute ─────────────────────────────────────────────────────────
+# ── Run hula schedule ─────────────────────────────────────────────────────────
 
 ARGS=()
 if [[ -n "$BUILT_IN" ]]; then
@@ -104,12 +104,12 @@ fi
 [[ -n "$UPDATE_NOTIFICATION_URL" ]] && ARGS+=(--update-notification-url "$UPDATE_NOTIFICATION_URL")
 
 if [[ -n "$SCHEDULE" ]]; then
-  printf '⏰ Scheduling execute-action (%s)...\n' "$SCHEDULE" >&2
+  printf '⏰ Scheduling action (%s)...\n' "$SCHEDULE" >&2
 else
-  printf '🚀 Running execute-action...\n' >&2
+  printf '🚀 Running action...\n' >&2
 fi
 
-OUTPUT=$(hula execute "${ARGS[@]}" 2>&1) || die 2 "Execute failed: $OUTPUT"
+OUTPUT=$(hula schedule "${ARGS[@]}" 2>&1) || die 2 "Execute failed: $OUTPUT"
 
 # ── Parse identifiers from the human-readable CLI output ─────────────────────
 # Parsing is intentionally tolerant: a missing identifier becomes an empty

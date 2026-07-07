@@ -48,8 +48,27 @@ fi
 
 printf '🔀 Merging PR for issue #%s (remote-only)...\n' "$ISSUE_NUMBER" >&2
 
-hula merge "$ISSUE_NUMBER" 2>&1 >&2 \
-  || die 2 "Failed to merge PR for issue #${ISSUE_NUMBER}. Check the PR on GitHub."
+# Capture the CLI output so we can detect whether the local default branch was
+# fast-forwarded, while still surfacing it live to the user (on stderr — stdout
+# is reserved for the structured JSON result).
+set +e
+MERGE_OUTPUT=$(hula merge "$ISSUE_NUMBER" 2>&1)
+MERGE_EXIT=$?
+set -e
+
+printf '%s\n' "$MERGE_OUTPUT" >&2
+
+if [[ $MERGE_EXIT -ne 0 ]]; then
+  die 2 "Failed to merge PR for issue #${ISSUE_NUMBER}. Check the PR on GitHub."
+fi
+
+# Detect whether `hula merge` actually fast-forwarded the local default branch.
+# The CLI prints "✓ Local <branch> fast-forwarded to origin/<branch>" on success
+# and a specific warning (with remediation) on each skip/failure mode.
+LOCAL_UPDATED=false
+if printf '%s' "$MERGE_OUTPUT" | grep -q "Local.*fast-forwarded"; then
+  LOCAL_UPDATED=true
+fi
 
 # ── Step B2: Clean up stale session file (if applicable) ─────────────────────
 
@@ -69,6 +88,7 @@ fi
 
 # ── Output result ─────────────────────────────────────────────────────────────
 
-printf '{"status":"success","issueNumber":%s,"sessionCleaned":%s}\n' \
+printf '{"status":"success","issueNumber":%s,"sessionCleaned":%s,"localUpdated":%s}\n' \
   "$ISSUE_NUMBER" \
-  "$([ "$SESSION_CLEANED" == true ] && echo 'true' || echo 'false')"
+  "$([ "$SESSION_CLEANED" == true ] && echo 'true' || echo 'false')" \
+  "$([ "$LOCAL_UPDATED" == true ] && echo 'true' || echo 'false')"

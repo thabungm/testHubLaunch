@@ -6,7 +6,7 @@ argument-hint: "[issue-number]"
 allowed-tools: Bash Read
 ---
 
-You are an expert code reviewer for the HubLaunch project, responsible for verifying that Copilot (remote or local) has properly implemented all changes specified in an issue's plan.
+You are an expert code reviewer for the HubLaunch project, responsible for verifying that the implementation agent (Claude Code, run via `/hula-launch`) has properly implemented all changes specified in an issue's plan.
 
 ## Instructions
 
@@ -49,7 +49,7 @@ User input: $ARGUMENTS
 - If found, extract and use this issue number
 
 **Priority 2: Check chat history for automatic detection**
-- Look for previous `/hula-create` output in THIS chat
+- Look for previous `/hula-launch` (or legacy `/hula-create`) output in THIS chat
 - Parse text like: "Created issue YizYah/hub-launch#42"
 - Also check HTML comment: `<!-- hula-issue: 42 -->`
 
@@ -99,7 +99,7 @@ Branch: <prBranch>
 ```
 ⚠️  Warning: This PR is in DRAFT state.
 
-Copilot may still be working on the implementation. The verification results might be incomplete.
+The implementation agent may still be working on the implementation. The verification results might be incomplete.
 
 Do you want to continue with verification anyway? (y/n)
 ```
@@ -283,9 +283,9 @@ Display the complete verification report in the chat.
 
 Then ask:
 ```
-📝 Post this verification to PR as a comment for @copilot to review? (y/n)
+📝 Post this verification to PR as a comment? If issues found, use `/hula-fix` to address them. (y/n)
 
-This will add the report as a comment on PR #<pr-number> and mention @copilot.
+This will add the report as a comment on PR #<pr-number>.
 ```
 
 Wait for user response.
@@ -306,7 +306,7 @@ Parse the JSON output:
   ```
   ✅ Verification report posted to PR #<pr-number>
 
-  @copilot has been notified and can now review and address any gaps.
+  If gaps were found, run `/hula-fix <issue-number>` to address them.
   ```
 
 **If user says no (n)**:
@@ -360,7 +360,7 @@ Perform basic verification:
 
 ## Example Interaction 1: Full Verification with Auto-Detection
 
-**User** (after creating issue with `/hula-create`): `/hula-verify`
+**User** (after launching with `/hula-launch`): `/hula-verify`
 
 **You**:
 ```
@@ -375,7 +375,7 @@ Status: open
 
 📋 PR URL: <github-pr-url>
 Status: open (ready for review)
-Branch: copilot/issue-42
+Branch: feature-user-auth
 
 📊 PR Changes Summary:
 
@@ -496,9 +496,9 @@ Lines: +457 -23
 
 ---
 
-📝 Post this verification to PR as a comment for @copilot to review? (y/n)
+📝 Post this verification to PR as a comment? If issues found, use `/hula-fix` to address them. (y/n)
 
-This will add the report as a comment on PR #123 and mention @copilot.
+This will add the report as a comment on PR #123.
 ```
 
 **User**: `y`
@@ -507,7 +507,7 @@ This will add the report as a comment on PR #123 and mention @copilot.
 ```
 ✅ Verification report posted to PR #123
 
-@copilot has been notified and can now review and address any gaps.
+If gaps were found, run `/hula-fix 42` to address them.
 
 PR comment: <github-pr-comment-url>
 ```
@@ -529,7 +529,7 @@ Status: closed
 
 📋 PR URL: <github-pr-url>
 Status: merged
-Branch: copilot/issue-42
+Branch: fix-button-validation
 
 ℹ️  Note: This PR has already been merged.
 
@@ -585,9 +585,9 @@ Lines: +45 -12
 
 ---
 
-📝 Post this verification to PR as a comment for @copilot to review? (y/n)
+📝 Post this verification to PR as a comment? If issues found, use `/hula-fix` to address them. (y/n)
 
-This will add the report as a comment on PR #124 and mention @copilot.
+This will add the report as a comment on PR #124.
 ```
 
 ## Example Interaction 3: No Plan Found
@@ -607,11 +607,11 @@ Status: open
 
 📋 PR URL: <github-pr-url>
 Status: open (draft)
-Branch: copilot/issue-45
+Branch: update-dependencies
 
 ⚠️  Warning: This PR is in DRAFT state.
 
-Copilot may still be working on the implementation. The verification results might be incomplete.
+The implementation agent may still be working on the implementation. The verification results might be incomplete.
 
 Do you want to continue with verification anyway? (y/n)
 ```
@@ -684,7 +684,7 @@ Lines: +15 -15
 
 ---
 
-📝 Post this verification to PR as a comment for @copilot to review? (y/n)
+📝 Post this verification to PR as a comment? If issues found, use `/hula-fix` to address them. (y/n)
 ```
 
 ## Important Notes
@@ -718,14 +718,14 @@ Use clear, consistent criteria:
 - ❌ **Missing**: No evidence found in PR changes
 - ℹ️  **Info**: Use for additional context or observations
 
-### Copilot Activity Detection
+### Implementation Activity Detection
 
-Check for signs that Copilot is still working:
+Check for signs that the implementation agent is still working:
 
 - PR is in draft state
 - Recent commits in the last hour
 - PR description mentions "work in progress"
-- Comments from Copilot indicating ongoing work
+- Comments indicating ongoing work
 
 Warn users if verification might be premature.
 
@@ -734,7 +734,6 @@ Warn users if verification might be premature.
 When posting to PR, ensure:
 
 - Use proper markdown formatting
-- Include @copilot mention at the top
 - Keep the format clean and readable
 - Use emoji sparingly (GitHub renders them in comments)
 - Include links to specific files when possible
@@ -749,6 +748,6 @@ When posting to PR, ensure:
 - ✅ Acceptance criteria mapped to evidence
 - ✅ Comprehensive verification report generated
 - ✅ Report displayed in chat with clear formatting
-- ✅ Option to post to PR as comment (with @copilot mention)
+- ✅ Option to post to PR as comment (suggesting `/hula-fix` for any gaps)
 - ✅ Graceful error handling for all failure scenarios
 - ✅ Clear, actionable recommendations provided

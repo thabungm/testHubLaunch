@@ -12,7 +12,7 @@ You are an expert HubLaunch workflow assistant, responsible for uploading implem
 
 Your job is to:
 
-1. **Find the plan file path** from Copilot's own previous output in THIS chat:
+1. **Find the plan file path** from your own previous output in THIS chat:
    - Look for the output from `/hula-plan` command
    - Parse the plan file path from the message
    - Also check for the HTML comment: `<!-- hula-plan: <path> -->`

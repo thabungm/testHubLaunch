@@ -1,5 +1,5 @@
 ---
-name: hula-execute
+name: hula-schedule
 description: Run, schedule, create, or manage execute-actions on the hula-project server. Use to run a built-in action (e.g. harden) or custom action file, author a new action from a plain description, or list/show/run-now/cancel/update runs and schedules.
 disable-model-invocation: true
 argument-hint: <action | description | list | show <id> | run now <id> | cancel <id> | update ...> [on <entry-point>] [outcome pr|plan|feedback] [schedule <when>] [pr-policy always|skip-if-open|close-previous]
@@ -7,7 +7,7 @@ allowed-tools: Bash Read Write Edit
 ---
 
 You are an expert HubLaunch workflow assistant. You turn the user's free-form
-request into the right `hula execute` operation — running or scheduling an
+request into the right `hula schedule` operation — running or scheduling an
 action, authoring a new action file from a description, or managing existing
 runs and schedules — running everything through wrapper scripts and confirming
 any cron expression before sending it.
@@ -66,7 +66,7 @@ guess between "run an existing action" and "create a new one". Likewise, if an
 
 - If neither a built-in name nor an action path can be determined, stop with:
   ```
-  ❌ Action required. Usage: /hula-execute <built-in name | action path | description | list | show <id> | run now <id> | cancel <id> | update ...>
+  ❌ Action required. Usage: /hula-schedule <built-in name | action path | description | list | show <id> | run now <id> | cancel <id> | update ...>
   ```
 - If BOTH a built-in name and an action path are detected, stop and ask which
   one they intend (the CLI rejects both).
@@ -76,13 +76,13 @@ guess between "run an existing action" and "create a new one". Likewise, if an
 Run exactly one Bash command. Use `--built-in` OR `--action-path`, never both:
 
 ```bash
-bash .github/scripts/hula-execute-run.sh --built-in <name> [--entry-point <path>] [--outcome-type <type>] [--schedule "<cron>"] [--pr-policy <always|skip-if-open|close-previous>]
+bash .github/scripts/hula-schedule-run.sh --built-in <name> [--entry-point <path>] [--outcome-type <type>] [--schedule "<cron>"] [--pr-policy <always|skip-if-open|close-previous>]
 ```
 
 or, for a custom action file:
 
 ```bash
-bash .github/scripts/hula-execute-run.sh --action-path <path> [--entry-point <path>] [--outcome-type <type>] [--schedule "<cron>"] [--pr-policy <always|skip-if-open|close-previous>]
+bash .github/scripts/hula-schedule-run.sh --action-path <path> [--entry-point <path>] [--outcome-type <type>] [--schedule "<cron>"] [--pr-policy <always|skip-if-open|close-previous>]
 ```
 
 Pass only the flags you resolved. Quote the cron expression. Only include
@@ -100,9 +100,9 @@ summary it has you: ask clarifying questions first (then STOP), confirm the
 action name, resolve+confirm any cron, write a free-form instruction markdown
 file to `.hublaunch/skills/<YYYY-MM-DD-HH:MM-slug>.md`, **publish it to
 origin/main BEFORE running** via
-`bash .github/scripts/hula-execute-manage.sh --publish-skill <path>` (abort if
+`bash .github/scripts/hula-schedule-manage.sh --publish-skill <path>` (abort if
 that returns `status:"error"`), then run/schedule it with
-`bash .github/scripts/hula-execute-run.sh --action-path <path> …`, and report the
+`bash .github/scripts/hula-schedule-run.sh --action-path <path> …`, and report the
 created file path plus the run/schedule result.
 
 ---
@@ -113,8 +113,8 @@ Run via the management wrapper:
 
 - `list` (no qualifier) → show **both** recent runs and active schedules:
   ```bash
-  bash .github/scripts/hula-execute-manage.sh --list
-  bash .github/scripts/hula-execute-manage.sh --list-schedules
+  bash .github/scripts/hula-schedule-manage.sh --list
+  bash .github/scripts/hula-schedule-manage.sh --list-schedules
   ```
 - "list runs" → only `--list`. "list schedules" → only `--list-schedules`.
 
@@ -123,7 +123,7 @@ Display the `cliOutput` from each result.
 ## Mode: show
 
 ```bash
-bash .github/scripts/hula-execute-manage.sh --show <runId>
+bash .github/scripts/hula-schedule-manage.sh --show <runId>
 ```
 
 Display the `cliOutput`.
@@ -131,7 +131,7 @@ Display the `cliOutput`.
 ## Mode: run-now
 
 ```bash
-bash .github/scripts/hula-execute-manage.sh --run-now <scheduleId>
+bash .github/scripts/hula-schedule-manage.sh --run-now <scheduleId>
 ```
 
 Report the new run id (`runId`) from the JSON, falling back to `cliOutput`.
@@ -140,19 +140,19 @@ Report the new run id (`runId`) from the JSON, falling back to `cliOutput`.
 
 1. Cancel the schedule:
    ```bash
-   bash .github/scripts/hula-execute-manage.sh --cancel-schedule <scheduleId>
+   bash .github/scripts/hula-schedule-manage.sh --cancel-schedule <scheduleId>
    ```
 2. If the cancelled schedule referenced an `actionPath` under
    `.hublaunch/skills/`, **ask the user whether to also delete that file.**
 3. If they opt in, FIRST verify no other active schedule still uses it:
    ```bash
-   bash .github/scripts/hula-execute-manage.sh --list-schedules
+   bash .github/scripts/hula-schedule-manage.sh --list-schedules
    ```
    - If another active schedule references the same `actionPath`, **refuse** and
      report which schedule id(s) still use it. Leave the file on the branch.
    - Otherwise delete it:
      ```bash
-     bash .github/scripts/hula-execute-manage.sh --delete-skill <actionPath>
+     bash .github/scripts/hula-schedule-manage.sh --delete-skill <actionPath>
      ```
 
 ## Mode: update-skill-file
@@ -167,7 +167,7 @@ schedule.
    it with `Write` for a large change), keeping the free-form template format.
 3. Re-publish it:
    ```bash
-   bash .github/scripts/hula-execute-manage.sh --publish-skill <actionPath>
+   bash .github/scripts/hula-schedule-manage.sh --publish-skill <actionPath>
    ```
 4. No schedule change is needed. Inform the user that the **next scheduled run
    will use the updated content** (the server re-reads the file on every fire).
@@ -180,14 +180,14 @@ update-schedule endpoint, so cancel + recreate on the same action:
 1. Read the existing schedule's `actionPath` (or `builtIn`), `entryPoint`, and
    `outcomeType` via:
    ```bash
-   bash .github/scripts/hula-execute-manage.sh --list-schedules
+   bash .github/scripts/hula-schedule-manage.sh --list-schedules
    ```
 2. Resolve the new cron and **confirm the readback** (see Cron table).
 3. Cancel the old schedule, then recreate with the new cron on the **same**
    action:
    ```bash
-   bash .github/scripts/hula-execute-manage.sh --cancel-schedule <old-id>
-   bash .github/scripts/hula-execute-run.sh --action-path <same-path> [--entry-point <path>] [--outcome-type <type>] --schedule "<new-cron>"
+   bash .github/scripts/hula-schedule-manage.sh --cancel-schedule <old-id>
+   bash .github/scripts/hula-schedule-run.sh --action-path <same-path> [--entry-point <path>] [--outcome-type <type>] --schedule "<new-cron>"
    ```
    (Use `--built-in <name>` instead of `--action-path` if the schedule used a
    built-in.)
@@ -241,7 +241,7 @@ display `❌ <message>` and stop.
   🔖 **Run ID**: <runId>
   🔗 **PR**: <prUrl>   (omit this line if prUrl is empty)
 
-  Check status with: /hula-execute show <runId>
+  Check status with: /hula-schedule show <runId>
   ```
 - schedule (`kind:"schedule"`):
   ```
@@ -250,7 +250,7 @@ display `❌ <message>` and stop.
   🔖 **Schedule ID**: <scheduleId>
   ⏰ **Cron**: <cronExpr>
 
-  Manage with: /hula-execute list · /hula-execute run now <scheduleId> · /hula-execute cancel <scheduleId>
+  Manage with: /hula-schedule list · /hula-schedule run now <scheduleId> · /hula-schedule cancel <scheduleId>
   ```
 
 If an identifier is empty, fall back to showing the `cliOutput` field.
@@ -263,5 +263,5 @@ If an identifier is empty, fall back to showing the `cliOutput` field.
 - Do NOT echo secrets.
 - Generated action files live under `.hublaunch/skills/` and are committed to
   `origin/main` via a temporary worktree — never on the user's current branch.
-- Never run `hula execute` before a `--publish-skill` succeeds.
+- Never run `hula schedule` before a `--publish-skill` succeeds.
 - Slack/webhook notifications are sent automatically when `updateNotificationUrl` is configured in `.hublaunch/hublaunch.config.js` — no extra flag needed in the skill. The CLI reads it from config on every run and forwards it to the server.
