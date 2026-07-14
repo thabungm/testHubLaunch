@@ -83,3 +83,63 @@ npm run typecheck        # tsc --noEmit, strict
 - `.env` stays uncommitted (gitignored); the webhook URL is never printed.
 - Node < 22.6 cannot run `.ts` directly — use the `npm run` scripts (which use
   `tsx`) or `npx tsx scripts/...`.
+
+---
+
+# Web app: Landing + Contact Us pages (`src/`)
+
+In addition to the headless `scripts/` API above, `src/` contains a minimal
+zero-dependency web app (Node's built-in `http` module) exposing two pages and a
+form that posts submissions to Slack via `SLACK_URL`.
+
+## Files
+
+- `src/server.ts` — HTTP server + routing.
+- `src/pages.ts` — `landingPage()` / `contactPage(status?)` returning HTML.
+- `src/slack.ts` — `sendContactToSlack({ email, subject, body })`, POSTs
+  `{"text": ...}` to `SLACK_URL`; returns `{ status, body }`; throws if
+  `SLACK_URL` is unset. Never logs the webhook URL.
+- `src/slack.test.ts` — the automated Slack-notification test (see below).
+
+## Routes
+
+- `GET /` — Landing page ("Welcome, we are coming soon." + link to `/contact`).
+- `GET /contact` — Contact form (email, subject, body). Supports
+  `?status=ok` / `?status=error` to show a banner after redirect.
+- `POST /api/contact` — parses the `application/x-www-form-urlencoded` body,
+  validates (all three fields non-empty, `email` contains `@`), calls
+  `sendContactToSlack`, then redirects to `/contact?status=ok` on success or
+  `/contact?status=error` on validation/Slack failure (never crashes, never
+  leaks the URL).
+
+## Run the server
+
+Export `SLACK_URL` first (`.env` is gitignored, read from `process.env` only):
+
+```bash
+set -a; source .env; set +a
+npm start          # or: tsx src/server.ts  (Node 24+: node src/server.ts)
+```
+
+Expected stdout: `Server listening on http://localhost:3000`. Override the port
+with `PORT`. Open `http://localhost:3000/` and `http://localhost:3000/contact`.
+
+## Run the Slack-notification test
+
+```bash
+set -a; source .env; set +a
+npm test           # or: tsx --test src/slack.test.ts
+```
+
+- **Live test:** performs a **real** POST to `SLACK_URL` and asserts HTTP 200 +
+  body `ok`. It **posts a visible message to the real Slack channel on every run**
+  and requires `SLACK_URL` + network access. If `SLACK_URL` is unset the test
+  **fails** with a clear message (a live send cannot be verified without it).
+- **Missing-config test:** deletes `SLACK_URL` for its own scope and asserts
+  `sendContactToSlack` throws; restores `SLACK_URL` in `finally`. No network.
+
+## Node version note
+
+Node **24+** runs the `.ts` files directly (`node src/server.ts`,
+`node --test`). This repo currently runs **Node 20**, which cannot strip types
+natively, so the `npm` scripts use [`tsx`](https://tsx.is/) (a devDependency).
