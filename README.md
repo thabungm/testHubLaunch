@@ -83,3 +83,64 @@ npm run typecheck        # tsc --noEmit, strict
 - `.env` stays uncommitted (gitignored); the webhook URL is never printed.
 - Node < 22.6 cannot run `.ts` directly — use the `npm run` scripts (which use
   `tsx`) or `npx tsx scripts/...`.
+
+---
+
+# Web app: Landing + Contact Us pages (`src/`)
+
+A minimal zero-framework web server (Node's built-in `http`) exposing two pages
+plus a form endpoint that posts submissions to Slack via `SLACK_URL`.
+
+- `GET /` — Landing page ("Welcome, we are coming soon." + link to Contact).
+- `GET /contact` — Contact Us form (email, subject, body). Supports an optional
+  `?status=ok` / `?status=error` banner shown after a submit redirect.
+- `POST /api/contact` — parses the `application/x-www-form-urlencoded` body,
+  validates (all three fields non-empty, email contains `@`), calls
+  `sendContactToSlack(...)`, then redirects to `/contact?status=ok` on success or
+  `/contact?status=error` on validation/Slack failure.
+
+Files: `src/server.ts` (routing), `src/pages.ts` (HTML), `src/slack.ts`
+(`sendContactToSlack`), `src/slack.test.ts` (tests).
+
+## Setup — export `SLACK_URL`
+
+Same as above: the server/test read `SLACK_URL` from `process.env` only.
+
+```bash
+set -a; source .env; set +a
+```
+
+Or run inside the HubLaunch container, which forwards `SLACK_URL`.
+
+## Run the server
+
+```bash
+npm start          # tsx src/server.ts   (or: PORT=8080 npm start)
+```
+
+Prints `Server listening on http://localhost:3000`. Open `/` and `/contact`.
+
+> **Node version note:** the repo runs on Node v20, which cannot execute `.ts`
+> files natively, so the scripts use [`tsx`](https://tsx.is/) (a devDependency).
+> On Node ≥ 22.6 you may instead run `node src/server.ts` directly.
+
+## Run the Slack-notification test
+
+```bash
+npm test           # node --import tsx --test src/slack.test.ts
+```
+
+- **Live send test:** with a real `SLACK_URL` set, it POSTs a message to the
+  **real** Slack channel and asserts HTTP `200` + body `ok`. Requires `SLACK_URL`
+  and network access; if `SLACK_URL` is unset the test fails with a clear message.
+- **Missing-config test:** with `SLACK_URL` deleted (only within its own scope,
+  restored in `finally`), it asserts `sendContactToSlack` throws
+  `SLACK_URL environment variable is not set` — no network needed.
+
+> ⚠️ `npm test` posts a **real** message to the Slack channel tied to `SLACK_URL`.
+
+## Type-check
+
+```bash
+npm run typecheck  # tsc --noEmit, strict — covers scripts/ and src/
+```
