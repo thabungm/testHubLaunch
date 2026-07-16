@@ -3,13 +3,26 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
     "contact": "tsx scripts/contact.ts",
-    "test:contact": "tsx scripts/test-contact.ts",
-    "typecheck": "tsc --noEmit"
+    "test:contact": "tsx scripts/test-contact.ts"
+  },
+  "dependencies": {
+    "next": "^15.5.20",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
     "tsx": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^2.1.0"
   }
 }
