@@ -83,3 +83,55 @@ npm run typecheck        # tsc --noEmit, strict
 - `.env` stays uncommitted (gitignored); the webhook URL is never printed.
 - Node < 22.6 cannot run `.ts` directly — use the `npm run` scripts (which use
   `tsx`) or `npx tsx scripts/...`.
+
+---
+
+# Web app: Landing + Contact Us pages (`src/`)
+
+In addition to the headless `scripts/` API above, `src/` provides a minimal web
+app built on Node's built-in `http` module (zero runtime dependencies). It serves
+two pages and forwards Contact-form submissions to Slack via `SLACK_URL`.
+
+Routes:
+
+- `GET /` — Landing page ("Welcome — we are coming soon", with a link to Contact).
+- `GET /contact` — Contact Us form (**email**, **subject**, **body**), optionally
+  showing a success/error banner via `?status=ok` / `?status=error`.
+- `POST /api/contact` — parses the form (`application/x-www-form-urlencoded`),
+  validates it, calls `sendContactToSlack(...)`, and redirects (`302`) back to
+  `/contact?status=ok` on success or `/contact?status=error` on failure.
+
+## Run the server
+
+Export `SLACK_URL` first (same as above), then:
+
+```bash
+set -a; source .env; set +a   # export SLACK_URL from .env
+npm start                     # or: npx tsx src/server.ts
+```
+
+Expected stdout: `Server listening on http://localhost:3000`. Open
+`http://localhost:3000/` and `http://localhost:3000/contact`. Set `PORT` to
+override the default `3000`. On Node ≥ 22 you can also run `node src/server.ts`
+directly; on Node < 22 use `tsx` (as `npm start` does).
+
+## Run the Slack-notification test
+
+```bash
+npm test                      # or: npx tsx --test src/slack.test.ts
+```
+
+- **Test 1 (LIVE):** performs a **real** Slack send via `SLACK_URL` and asserts
+  Slack returns HTTP `200` with body `ok`. ⚠️ This posts a **visible message to
+  the real Slack channel** on every run and requires `SLACK_URL` + network access.
+  If `SLACK_URL` is unset the test **fails** with a clear assertion message.
+- **Test 2 (offline):** asserts `sendContactToSlack` throws
+  `SLACK_URL environment variable is not set` when `SLACK_URL` is unset (it
+  deletes and restores the var within its own scope).
+
+## API (`src/slack.ts`)
+
+- `interface Contact { email; subject; body }`
+- `sendContactToSlack(contact)` — reads `process.env.SLACK_URL` (throws if unset),
+  composes the message text, POSTs `{"text": ...}` to the webhook, and resolves
+  with `{ status, body }`. Never logs the webhook URL.
