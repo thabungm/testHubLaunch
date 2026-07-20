@@ -1,4 +1,63 @@
-# Contact Us → Slack
+# Landing + Contact Us Web App → Slack
+
+A minimal, zero-runtime-dependency web app (Node's built-in `http` module) that
+serves two pages and forwards the contact form to Slack:
+
+- **`GET /`** — Landing page ("Welcome, we are coming soon." + link to Contact).
+- **`GET /contact`** — Contact Us form with **email**, **subject**, **body** fields.
+- **`POST /api/contact`** — parses the `application/x-www-form-urlencoded` body,
+  validates it, calls `sendContactToSlack(...)`, and redirects to
+  `/contact?status=ok` on success or `/contact?status=error` on failure.
+
+On a valid submit the server POSTs `{"text": "..."}` to the Slack **Incoming
+Webhook** URL in the `SLACK_URL` environment variable. Slack returns HTTP `200`
+with body `ok` on success. The webhook URL is a secret and is **never logged**.
+
+Source: `src/server.ts` (routing), `src/pages.ts` (HTML), `src/slack.ts`
+(`sendContactToSlack`). Test: `src/slack.test.ts`.
+
+## Run the web app
+
+> **Node version:** this repo runs on **Node v20**, which cannot strip TypeScript
+> types natively, so the scripts use [`tsx`](https://tsx.is/) (a devDependency).
+> On **Node ≥ 22.6** you can also run the files directly, e.g. `node src/server.ts`.
+
+```bash
+npm install                 # installs tsx / typescript / @types/node
+set -a; source .env; set +a # export SLACK_URL (see Setup below); optional for browsing
+npm start                   # tsx src/server.ts  ->  http://localhost:3000
+```
+
+Then open:
+
+- `http://localhost:3000/` — landing page.
+- `http://localhost:3000/contact` — contact form. Submitting a valid form posts a
+  message to the Slack channel tied to `SLACK_URL` and shows a success banner.
+  Set `PORT` to change the port (defaults to `3000`).
+
+If `SLACK_URL` is unset, a submit safely redirects to the error banner (the
+server logs the error without the URL and does not crash).
+
+## Test the Slack send
+
+```bash
+set -a; source .env; set +a   # export a real SLACK_URL (required for the live test)
+npm test                      # tsx --test src/slack.test.ts
+```
+
+`npm test` runs two `node:test` cases:
+
+1. **Live send** — calls `sendContactToSlack(...)` against the real `SLACK_URL`
+   and asserts HTTP `200` + body `ok`. ⚠️ This is a **live** test: it posts a
+   **real, visible message** to the Slack channel and needs network access. If
+   `SLACK_URL` is unset the test fails with a clear assertion message.
+2. **Missing config** — asserts `sendContactToSlack` throws
+   `SLACK_URL environment variable is not set` (no network needed); it restores
+   `SLACK_URL` in `finally`.
+
+---
+
+# Contact Us → Slack (headless module)
 
 A headless "Contact Us" feature (for testing). Given a submission with four
 fields — **Name**, **Email**, **Subject**, **Body** — it validates the input and,
