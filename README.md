@@ -1,5 +1,74 @@
 # Contact Us → Slack
 
+> This repo contains **two** independent implementations of the "Contact Us →
+> Slack" idea:
+>
+> 1. **Web app (Next.js 15, App Router)** — a Landing page (`/`) and a Contact
+>    form (`/contact`) that POSTs to a server Route Handler (`/api/contact`)
+>    which notifies Slack. See **[Web App (Next.js)](#web-app-nextjs)** below.
+> 2. **Headless script** — the original `scripts/contact.ts` API described in the
+>    rest of this document.
+>
+> Both read the Slack Incoming Webhook URL from the `SLACK_URL` environment
+> variable and never log it.
+
+## Web App (Next.js)
+
+A minimal Next.js 15 (App Router) + TypeScript site with two pages and one
+server endpoint:
+
+- **`/`** — Landing page: a "Welcome — we're coming soon." message with a link
+  to the contact page.
+- **`/contact`** — Contact form with three fields (**email**, **subject**,
+  **body**) and a **Send** button. Submitting POSTs JSON to `/api/contact`.
+- **`/api/contact`** (server Route Handler) — validates the input and calls
+  `sendSlackNotification()` from `src/lib/slack.ts`, which POSTs a formatted
+  message to the Slack Incoming Webhook at `SLACK_URL`. Returns `200` on
+  success, `400` on invalid input, `502` on a Slack/network failure.
+
+### Prerequisites
+
+- Node **≥ 18.18** (this repo runs Node 20+; Next.js 15 requires ≥ 18.18).
+
+### Install
+
+```bash
+npm install
+```
+
+### `SLACK_URL`
+
+`SLACK_URL` is a Slack Incoming Webhook URL and is a **secret**. It is read
+**only** in server code (`src/lib/slack.ts`, invoked by `/api/contact`), is never
+prefixed `NEXT_PUBLIC_`, is never sent to the browser, and is never logged.
+
+Next.js **auto-loads `.env`** for `dev`/`build`/`start`, so `process.env.SLACK_URL`
+is populated locally without extra tooling. See [`.env.example`](.env.example) for
+the expected shape. `.env` stays gitignored.
+
+### Run
+
+```bash
+npm run dev      # http://localhost:3000  → Landing;  /contact → the form
+npm run build    # production build; must compile with no type errors
+npm start        # serve the production build
+```
+
+### Test
+
+```bash
+npm test         # runs the Vitest suite in src/lib/slack.test.ts (fetch mocked)
+```
+
+The test exercises the Slack-notification feature with a mocked global `fetch`
+(no live network): payload correctness, success on HTTP 200 + `ok`, failure on
+non-200 and body ≠ `ok`, a throw when `SLACK_URL` is unset, and that the webhook
+URL never leaks into error messages.
+
+---
+
+## Headless script (`scripts/contact.ts`)
+
 A headless "Contact Us" feature (for testing). Given a submission with four
 fields — **Name**, **Email**, **Subject**, **Body** — it validates the input and,
 on submit, posts a formatted [Slack Block Kit](https://api.slack.com/block-kit)
