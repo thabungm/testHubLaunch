@@ -1,4 +1,62 @@
-# Contact Us → Slack
+# Landing + Contact Us → Slack
+
+Two things live in this repo:
+
+1. **A small web app** (`src/`) — a **Landing page** (`GET /`) and a **Contact Us
+   page** (`GET /contact`) with a form (email, subject, body). Submitting the form
+   (`POST /api/contact`) posts the message to a Slack **Incoming Webhook** URL stored
+   in the `SLACK_URL` environment variable. Built on Node's built-in `http` module —
+   no framework, no build step, zero runtime dependencies.
+2. **A headless API** (`scripts/`) — the original `submitContactForm(input)`
+   function (Name/Email/Subject/Body) documented further down.
+
+## The web app (`src/`)
+
+| Route | Method | Purpose |
+| --- | --- | --- |
+| `/` | GET | Landing page — "Welcome / We are coming soon." + link to Contact |
+| `/contact` | GET | Contact form (email, subject, body). `?status=ok`/`?status=error` shows a banner |
+| `/api/contact` | POST | Parses the form, sends to Slack, redirects to `/contact?status=ok\|error` |
+
+### Run the server
+
+```bash
+set -a; source .env; set +a   # export SLACK_URL (see Setup below)
+npm start                     # or: tsx src/server.ts   → http://localhost:3000
+```
+
+`PORT` overrides the default `3000`. Open `http://localhost:3000/`, click through to
+`/contact`, fill in the form and submit — a message appears in the Slack channel and
+you are redirected to `/contact?status=ok`. A bad email (no `@`) or an empty field
+redirects to `/contact?status=error` without contacting Slack. If `SLACK_URL` is
+unset the submit handler logs a safe error (never the URL) and redirects to the error
+state; the server does not crash.
+
+### Test the Slack send
+
+```bash
+set -a; source .env; set +a
+npm test                      # or: tsx --test src/slack.test.ts
+```
+
+- **Live test:** calls `sendContactToSlack(...)` against the real `SLACK_URL` and
+  asserts HTTP `200` + body `ok`. ⚠️ This posts a **real** message to the Slack
+  channel on every run and requires `SLACK_URL` to be set plus network access.
+- **Missing-config test:** deletes `SLACK_URL` for its own scope and asserts the
+  function throws `SLACK_URL environment variable is not set` (no network), then
+  restores it.
+
+### Slack sender API (`src/slack.ts`)
+
+- `interface Contact { email; subject; body }`
+- `sendContactToSlack(contact)` — reads `SLACK_URL` (throwing if unset), POSTs
+  `{"text": ...}` (the three fields) to the webhook, and resolves with
+  `{ status, body }`. Never logs the webhook URL. Tolerates a `SLACK_URL` value that
+  some environments inject with wrapping quotes or a trailing comma.
+
+---
+
+## The headless API (`scripts/`)
 
 A headless "Contact Us" feature (for testing). Given a submission with four
 fields — **Name**, **Email**, **Subject**, **Body** — it validates the input and,
