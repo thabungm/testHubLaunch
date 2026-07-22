@@ -1,15 +1,12 @@
 {
-  "name": "test-hub-launch-contact",
+  "name": "test-hub-launch-web",
   "private": true,
   "type": "module",
   "scripts": {
-    "contact": "tsx scripts/contact.ts",
-    "test:contact": "tsx scripts/test-contact.ts",
-    "typecheck": "tsc --noEmit"
+    "start": "tsx src/server.ts",
+    "test": "tsx --test src/slack.test.ts"
   },
   "devDependencies": {
-    "@types/node": "^20",
-    "tsx": "^4",
-    "typescript": "^5"
+    "tsx": "^4.23.1"
   }
 }
