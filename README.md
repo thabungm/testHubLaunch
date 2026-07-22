@@ -78,8 +78,57 @@ npm run typecheck        # tsc --noEmit, strict
 - `submitContactForm(input)` — validates, then POSTs to `SLACK_URL`; resolves with
   `{ status, body }` (Slack returns `200` + `ok` on success).
 
+## Web app — Landing + Contact Us pages (`src/`)
+
+A tiny Node `http` server (no framework, no build step) that serves two pages and
+routes the Contact form to Slack via the same `SLACK_URL` webhook.
+
+- `GET /` — Landing page ("Welcome — we are coming soon", links to `/contact`).
+- `GET /contact` — Contact form with **email**, **subject**, **body** fields.
+- `POST /api/contact` — parses the `application/x-www-form-urlencoded` body,
+  validates (all non-empty; email contains `@`), calls `sendContactToSlack(...)`,
+  then redirects to `/contact?status=ok` on success or `/contact?status=error`
+  on validation/Slack failure (a fixed-string banner is shown — user input is
+  never reflected into HTML).
+
+### Run the server
+
+```bash
+set -a; source .env; set +a   # export SLACK_URL (or run in the HubLaunch container)
+npm start                     # or: tsx src/server.ts   (PORT defaults to 3000)
+```
+
+Expected stdout: `Server listening on http://localhost:3000`. Open
+`http://localhost:3000/` and `http://localhost:3000/contact`. Submitting a valid
+form posts a **real** message to the Slack channel tied to `SLACK_URL`.
+
+### Slack-notification test
+
+```bash
+npm test                      # or: tsx --test src/slack.test.ts
+```
+
+- **Live test:** calls `sendContactToSlack(...)` against the real `SLACK_URL` and
+  asserts HTTP `200` + body `ok` — this posts a **real** message to the channel
+  and needs `SLACK_URL` + network access. If `SLACK_URL` is unset the test fails.
+- **Missing-config test:** asserts `sendContactToSlack` throws
+  `SLACK_URL environment variable is not set` (no network), restoring the var in
+  `finally`.
+
+### API (`src/slack.ts`)
+
+- `interface Contact { email; subject; body }`
+- `sendContactToSlack(contact)` — reads `SLACK_URL` (throws if unset), POSTs
+  `{"text": "..."}` to the webhook, returns `{ status, body }`. Never logs the URL.
+  The raw env value is normalized (surrounding quotes / a trailing comma left by
+  env forwarding are stripped) before the request.
+
+> The test lives at `src/slack.test.ts` (not `test/`) because a 1-byte `test`
+> file at the repo root prevents creating a `test/` directory.
+
 ## Notes
 
 - `.env` stays uncommitted (gitignored); the webhook URL is never printed.
 - Node < 22.6 cannot run `.ts` directly — use the `npm run` scripts (which use
-  `tsx`) or `npx tsx scripts/...`.
+  `tsx`) or `npx tsx scripts/...`. This repo runs Node v20, so all scripts and the
+  server/test use `tsx`.
