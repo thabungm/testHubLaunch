@@ -1,30 +1,16 @@
-# Contact Us → Slack
+# Landing & Contact Us Pages
 
-A headless "Contact Us" feature (for testing). Given a submission with four
-fields — **Name**, **Email**, **Subject**, **Body** — it validates the input and,
-on submit, posts a formatted [Slack Block Kit](https://api.slack.com/block-kit)
-message to a Slack **Incoming Webhook** URL stored in the `SLACK_URL` environment
-variable. There is no web UI or HTTP server — "submit" means calling the exported
-`submitContactForm(input)` function.
+A minimal web app serving two pages: a **Landing Page** ("Welcome, coming soon") and a **Contact Us** page with a form. Submitting the Contact form posts the data to Slack via the `SLACK_URL` Incoming Webhook.
 
 ## Requirements
 
-- **Node ≥ 22.6** to run `.ts` files directly (`node scripts/contact.ts`), or
-- Any **Node ≥ 18** using [`tsx`](https://tsx.is/) (the `npm run` scripts below use
-  `tsx`, installed as a devDependency, so they work on Node 20+).
-- No runtime npm dependencies — the Slack call uses the global `fetch` (Node 18+).
-
-Install the dev tooling (`tsx`, `typescript`, `@types/node`) once:
-
-```bash
-npm install
-```
+- **Node ≥ 22** (v24.11.1 in this repo) to run `.ts` files directly without a build step.
+- No runtime npm dependencies — the server uses `node:http` and global `fetch`.
+- Valid `SLACK_URL` in `.env` (already configured) to run the live Slack test.
 
 ## Setup — export `SLACK_URL`
 
-`SLACK_URL` is a Slack Incoming Webhook URL. It is a **secret** and is never
-logged. The scripts read it from `process.env` only — they do **not** parse
-`.env`. Export it first (`.env` is gitignored):
+`SLACK_URL` is a Slack Incoming Webhook URL. It is a **secret** and is never logged. The server reads it from `process.env` only. Export it first:
 
 ```bash
 set -a; source .env; set +a
@@ -34,52 +20,54 @@ Or run inside the HubLaunch container, which already forwards `SLACK_URL`.
 
 ## Usage
 
-### CLI smoke test — send a sample submission
+### Start the server
 
 ```bash
-npm run contact          # or: tsx scripts/contact.ts
+npm start   # or: node src/server.ts
 ```
 
-Sends a fixed sample submission. On success prints
-`Contact submitted to Slack (HTTP 200)` and exits `0`.
+The server listens on `http://localhost:3000` (or `$PORT` if set). Open a browser:
 
-### Live test — real send + validation check
+- **Landing page**: `http://localhost:3000/` — shows "Welcome, we are coming soon."
+- **Contact page**: `http://localhost:3000/contact` — shows the contact form with `email`, `subject`, and `body` fields.
+
+Submit the form to post the data to Slack. On success, you'll see a success banner and the message appears in the Slack channel. On error, you'll see an error banner.
+
+### Run tests
 
 ```bash
-npm run test:contact     # or: tsx scripts/test-contact.ts
+npm test   # or: node --test
 ```
 
-- **Test 1 (live):** performs a **real** Slack send via `SLACK_URL` and asserts
-  HTTP 200. The subject includes an ISO timestamp so the message is easy to find
-  in the channel: `PASS (live send): HTTP 200, body: ok`.
-- **Test 2 (validation, no network):** confirms invalid input is rejected with a
-  `ContactValidationError` and **no** Slack message is sent:
-  `PASS (validation): rejected 4 invalid fields`.
+Two tests:
 
-Prints `ALL PASS` and exits `0` only if both pass. If `SLACK_URL` is unset it
-prints `FAIL: SLACK_URL not set — cannot run live test` and exits `1`.
+1. **Live Slack send** — with `SLACK_URL` set, calls `sendContactToSlack()` and asserts HTTP 200 + body `ok`. Posts a real message to the Slack channel.
+2. **Missing config** — confirms `sendContactToSlack()` throws when `SLACK_URL` is unset.
 
-### Type-check
+⚠️ The live test requires `SLACK_URL` to be set and will post a visible message to the real Slack channel.
 
-```bash
-npm run typecheck        # tsc --noEmit, strict
-```
+## API
 
-## API (`scripts/contact.ts`)
+**`src/slack.ts`**
 
-- `interface ContactInput { name; email; subject; body }`
-- `class ContactValidationError extends Error` — carries `issues: string[]`.
-- `validateContact(input)` — trims all fields; requires non-empty `name`,
-  `subject`, `body`; requires `email` to match `/^[^@\s]+@[^@\s]+\.[^@\s]+$/`.
-  Collects **all** issues and throws before any network call.
-- `buildSlackPayload(input)` — builds the Block Kit message (header + Name/Email
-  fields + Message section) with a `text` fallback; escapes `&`, `<`, `>` in user
-  input and truncates to Slack's limits.
-- `submitContactForm(input)` — validates, then POSTs to `SLACK_URL`; resolves with
-  `{ status, body }` (Slack returns `200` + `ok` on success).
+- `interface Contact { email; subject; body }`
+- `sendContactToSlack(contact)` — POSTs to the `SLACK_URL` webhook. Returns `{ status, body }`. Throws if `SLACK_URL` is unset.
+
+**`src/pages.ts`**
+
+- `landingPage()` — returns HTML for the landing page.
+- `contactPage(status?)` — returns HTML for the contact form; optionally shows a success/error banner.
+
+**`src/server.ts`**
+
+- `GET /` — returns the landing page.
+- `GET /contact` — returns the contact form (supports `?status=ok` and `?status=error` query params).
+- `POST /api/contact` — parses the form, validates, calls `sendContactToSlack()`, and redirects.
+- 404 for unknown routes.
 
 ## Notes
 
-- `.env` stays uncommitted (gitignored); the webhook URL is never printed.
-- Node < 22.6 cannot run `.ts` directly — use the `npm run` scripts (which use
-  `tsx`) or `npx tsx scripts/...`.
+- `.env` is gitignored; the webhook URL is never logged.
+- Form submission is a simple HTML form with no client-side JavaScript.
+- Email must contain an `@`; all three fields must be non-empty after trimming.
+- On validation failure or Slack error, the user is redirected to an error page; no message reaches Slack.
