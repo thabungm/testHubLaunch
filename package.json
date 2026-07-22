@@ -3,6 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "start": "tsx src/server.ts",
+    "test": "tsx --test src/slack.test.ts",
     "contact": "tsx scripts/contact.ts",
     "test:contact": "tsx scripts/test-contact.ts",
     "typecheck": "tsc --noEmit"
