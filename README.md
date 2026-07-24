@@ -83,3 +83,43 @@ npm run typecheck        # tsc --noEmit, strict
 - `.env` stays uncommitted (gitignored); the webhook URL is never printed.
 - Node < 22.6 cannot run `.ts` directly — use the `npm run` scripts (which use
   `tsx`) or `npx tsx scripts/...`.
+
+---
+
+# Slack Welcome Message Script
+
+A simple TypeScript script that posts a fixed welcome message to Slack via the
+`SLACK_URL` Incoming Webhook. Includes an end-to-end test script to verify the
+post succeeds.
+
+## Usage
+
+### Send welcome message
+
+```bash
+npm run send               # or: tsx scripts/send-slack.ts
+```
+
+On success prints `Sent "Welcome to my test" to Slack (HTTP 200)` and exits `0`.
+If `SLACK_URL` is unset, prints an error to stderr and exits `1`.
+
+### Test send + verify response
+
+```bash
+npm run test:slack        # or: tsx scripts/test-send-slack.ts
+```
+
+Performs a real POST to `SLACK_URL` and asserts the response is HTTP 200 with
+body `ok`. Prints `PASS: HTTP 200, body: ok` and exits `0` on success; prints
+`FAIL: ...` and exits `1` otherwise.
+
+### Setup
+
+Before running, export `SLACK_URL` from `.env`:
+
+```bash
+set -a; source .env; set +a
+npm run send
+```
+
+Or run inside the HubLaunch container, which already forwards `SLACK_URL`.
