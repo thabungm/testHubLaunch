@@ -78,6 +78,27 @@ npm run typecheck        # tsc --noEmit, strict
 - `submitContactForm(input)` — validates, then POSTs to `SLACK_URL`; resolves with
   `{ status, body }` (Slack returns `200` + `ok` on success).
 
+## Slack Welcome Message Script (`scripts/send-slack.ts`)
+
+A simple standalone script that sends the fixed message `Welcome to my test` to Slack via `SLACK_URL`.
+
+### Usage
+
+```bash
+npm run send             # or: node scripts/send-slack.ts
+```
+
+On success, prints `Sent "Welcome to my test" to Slack (HTTP 200)` and exits `0`.
+If `SLACK_URL` is unset, prints an error to stderr and exits `1`.
+
+### Test Script
+
+```bash
+npm run test:slack      # or: node scripts/test-send-slack.ts
+```
+
+Performs a real POST to `SLACK_URL` and asserts HTTP 200. Prints `PASS: HTTP 200, body: ok` and exits `0` on success.
+
 ## Notes
 
 - `.env` stays uncommitted (gitignored); the webhook URL is never printed.

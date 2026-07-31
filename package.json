@@ -5,6 +5,8 @@
   "scripts": {
     "contact": "tsx scripts/contact.ts",
     "test:contact": "tsx scripts/test-contact.ts",
+    "send": "tsx scripts/send-slack.ts",
+    "test:slack": "tsx scripts/test-send-slack.ts",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
