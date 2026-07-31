@@ -78,6 +78,29 @@ npm run typecheck        # tsc --noEmit, strict
 - `submitContactForm(input)` — validates, then POSTs to `SLACK_URL`; resolves with
   `{ status, body }` (Slack returns `200` + `ok` on success).
 
+## Welcome Message Script
+
+A simple script to test posting to Slack. Sends the fixed message `Welcome to my test` to the `SLACK_URL` webhook.
+
+### Usage
+
+```bash
+npm run send          # or: tsx scripts/send-slack.ts
+```
+
+Sends the message to Slack. On success prints
+`Sent "Welcome to my test" to Slack (HTTP 200)` and exits `0`.
+
+### Live test — send + validation check
+
+```bash
+npm run test:slack    # or: tsx scripts/test-send-slack.ts
+```
+
+Performs a **real** Slack send via `SLACK_URL` and asserts HTTP 200. On success prints
+`PASS: HTTP 200, body: ok` and exits `0`. If `SLACK_URL` is unset it prints
+`FAIL: SLACK_URL not set — cannot run live test` and exits `1`.
+
 ## Notes
 
 - `.env` stays uncommitted (gitignored); the webhook URL is never printed.
