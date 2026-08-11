@@ -7,6 +7,10 @@ message to a Slack **Incoming Webhook** URL stored in the `SLACK_URL` environmen
 variable. There is no web UI or HTTP server — "submit" means calling the exported
 `submitContactForm(input)` function.
 
+## Contributing
+
+Interested in contributing? See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, code standards, testing, and the HubLaunch workflow.
+
 ## Requirements
 
 - **Node ≥ 22.6** to run `.ts` files directly (`node scripts/contact.ts`), or
