@@ -5,7 +5,8 @@
   "scripts": {
     "contact": "tsx scripts/contact.ts",
     "test:contact": "tsx scripts/test-contact.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit"
   },
   "devDependencies": {
     "@types/node": "^20",
