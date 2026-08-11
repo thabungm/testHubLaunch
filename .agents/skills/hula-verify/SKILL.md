@@ -1,6 +1,6 @@
 ---
 name: hula-verify
-description: Verify that a PR implementation matches the plan acceptance criteria. Use when asked to verify, review, or check a PR against its plan.
+description: "Full verification report: checks the PR against its plan, criterion by criterion (a summary score is already posted automatically at PR time). Use when asked to verify, review, or check a PR against its plan."
 disable-model-invocation: true
 argument-hint: "[issue-number]"
 allowed-tools: Bash Read
@@ -18,7 +18,7 @@ Your job is to:
 4. **Parse the plan** to extract acceptance criteria and implementation steps
 5. **Analyze PR changes** (files, tests, documentation)
 6. **Compare plan vs. implementation** and generate verification checklist
-7. **Display report in chat** with option to post to PR
+7. **Display report in chat** and post it to the PR automatically (unless `--no-post` was passed)
 
 ## Input Format
 
@@ -72,7 +72,7 @@ Stop execution here. Do not proceed.
 Run the gather script — it fetches issue details, finds the linked PR, and downloads file changes and diff in one terminal approval:
 
 ```bash
-bash .github/scripts/hula-verify-gather.sh <issue-number>
+hula script verify-gather -- <issue-number>
 ```
 
 The script outputs JSON with `status`, `issueTitle`, `issueState`, `issueUrl`, `prNumber`, `prTitle`, `prUrl`, `prState`, `prBranch`, `prIsDraft`, `diffFile`, `filesChanged`, and `lines`.
@@ -277,25 +277,18 @@ Create a detailed markdown report with the following sections:
 ---
 ```
 
-### Step 6: Display Report and Offer PR Comment
+### Step 6: Display Report and Post to PR
 
 Display the complete verification report in the chat.
 
-Then ask:
-```
-📝 Post this verification to PR as a comment? If issues found, use `/hula-fix` to address them. (y/n)
-
-This will add the report as a comment on PR #<pr-number>.
-```
-
-Wait for user response.
-
-**If user says yes (y)**:
-
-Save the verification report to a temporary file, then run the post script (one terminal approval):
+**If `--no-post` was NOT passed** (default): save the verification report to
+`.hublaunch/tmp/hula-verify-report-<pr-number>.md` (repo-local and gitignored —
+the directory was already created by the gather script back in Step 2, so this
+write never needs a permission prompt), then run the post script immediately,
+with no confirmation question (one terminal approval):
 
 ```bash
-bash .github/scripts/hula-verify-post.sh <pr-number> /tmp/hula-verify-report-<pr-number>.md
+hula script verify-post -- <pr-number> .hublaunch/tmp/hula-verify-report-<pr-number>.md
 ```
 
 The script outputs JSON with `status`, `prNumber`, and `commentUrl`.
@@ -308,6 +301,17 @@ Parse the JSON output:
 
   If gaps were found, run `/hula-fix <issue-number>` to address them.
   ```
+
+**If `--no-post` was passed**, ask instead:
+```
+📝 Post this verification to PR as a comment? If issues found, use `/hula-fix` to address them. (y/n)
+
+This will add the report as a comment on PR #<pr-number>.
+```
+
+Wait for user response.
+
+**If user says yes (y)**: save and post exactly as in the default flow above.
 
 **If user says no (n)**:
 ```
@@ -325,14 +329,14 @@ If user provides a plan file path:
 
 Read the plan from the specified file instead of the issue body.
 
-### Skip PR Comment Prompt
+### Skip Automatic Posting
 
-If user wants to automatically post to PR:
+If user wants the old confirm-before-posting behavior instead of the new default (auto-post):
 ```
-/hula-verify 42 --post
+/hula-verify 42 --no-post
 ```
 
-Skip the "post to PR?" prompt and automatically post the comment.
+Ask "post to PR?" before posting, instead of posting automatically.
 
 ### Basic Verification Mode
 
@@ -496,15 +500,6 @@ Lines: +457 -23
 
 ---
 
-📝 Post this verification to PR as a comment? If issues found, use `/hula-fix` to address them. (y/n)
-
-This will add the report as a comment on PR #123.
-```
-
-**User**: `y`
-
-**You**:
-```
 ✅ Verification report posted to PR #123
 
 If gaps were found, run `/hula-fix 42` to address them.
@@ -585,9 +580,11 @@ Lines: +45 -12
 
 ---
 
-📝 Post this verification to PR as a comment? If issues found, use `/hula-fix` to address them. (y/n)
+✅ Verification report posted to PR #124
 
-This will add the report as a comment on PR #124.
+If gaps were found, run `/hula-fix 42` to address them.
+
+PR comment: <github-pr-comment-url>
 ```
 
 ## Example Interaction 3: No Plan Found
@@ -684,7 +681,9 @@ Lines: +15 -15
 
 ---
 
-📝 Post this verification to PR as a comment? If issues found, use `/hula-fix` to address them. (y/n)
+✅ Verification report posted to PR #126
+
+PR comment: <github-pr-comment-url>
 ```
 
 ## Important Notes
@@ -748,6 +747,6 @@ When posting to PR, ensure:
 - ✅ Acceptance criteria mapped to evidence
 - ✅ Comprehensive verification report generated
 - ✅ Report displayed in chat with clear formatting
-- ✅ Option to post to PR as comment (suggesting `/hula-fix` for any gaps)
+- ✅ Verification report posted to PR as a comment by default (suggesting `/hula-fix` for any gaps); `--no-post` restores a confirm-before-posting prompt
 - ✅ Graceful error handling for all failure scenarios
 - ✅ Clear, actionable recommendations provided

@@ -1,1 +1,0 @@
-../../.agents/skills/hula-verify/SKILL.md

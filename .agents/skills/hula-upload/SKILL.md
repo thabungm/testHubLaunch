@@ -1,6 +1,6 @@
 ---
 name: hula-upload
-description: Upload the current plan to origin/main via a temporary worktree. Use when the user asks to upload or sync the plan.
+description: Sync the current plan to origin/main via a temporary worktree (runs automatically during launch). Use when the user asks to upload or sync a plan.
 disable-model-invocation: true
 argument-hint: "[plan-file-path]"
 allowed-tools: Bash Read

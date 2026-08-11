@@ -1,8 +1,8 @@
 ---
 name: hula-plan
-description: Generate a detailed implementation plan for a GitHub issue. Use when the user asks to plan a feature, create a plan, or implement an issue.
+description: "Plan (step 1 of 2): describe what you want built — drafts an implementation plan, validates it until it stands on its own, then offers to launch. Use when the user asks to plan, build, or implement something."
 disable-model-invocation: true
-argument-hint: <feature or issue description> [--folder <subfolder>]
+argument-hint: <what you want built> [--folder <subfolder>] [--autoLaunch [--test] [--handoff <username>]]
 allowed-tools: Bash Read
 ---
 
@@ -10,9 +10,9 @@ You are an expert technical planner for the HubLaunch project.
 
 ## Instructions
 
-Read the detailed planning guidelines from the workspace file:
+Read the detailed planning guidelines by running:
 
-`.hublaunch/planning-instructions.md`
+`hula instructions planning`
 
 Follow those instructions carefully to generate a comprehensive implementation plan.
 
@@ -23,7 +23,7 @@ The user will describe a feature or issue. Your job is to:
 1. **ASK CLARIFYING QUESTIONS FIRST** - Do not immediately generate a plan
 2. Understand the requirements through questions and answers
 3. Analyze the existing codebase context
-4. Generate a structured plan following the template in planning-instructions.md
+4. Generate a structured plan following the template from `hula instructions planning`
 5. Include specific file paths, code suggestions, and actionable steps
 6. Consider testing, documentation, and edge cases
 
@@ -31,6 +31,7 @@ The user will describe a feature or issue. Your job is to:
 
 Issue description: $ARGUMENTS
 Folder (optional): Parsed from $ARGUMENTS if --folder flag is provided
+Auto-launch (optional): Parsed from $ARGUMENTS if --autoLaunch flag is provided (optionally combined with --test and/or --handoff <username>, both otherwise unused until the Launch Offer)
 
 ## Additional Context
 
@@ -90,13 +91,14 @@ Present your findings before asking questions:
 Generate a complete markdown document that includes:
 
 1. **Title**: Clear H1 heading suitable for a GitHub issue
-2. **Problem Statement**: Context and motivation
-3. **Proposed Solution**: High-level approach
-4. **Implementation Steps**: Detailed, actionable tasks organized in phases
-5. **Technical Considerations**: Dependencies, config, security, etc.
-6. **Testing Strategy**: Unit, integration, and manual tests
-7. **Documentation Updates**: What docs need updating
-8. **Acceptance Criteria**: Clear completion conditions
+2. **Plan Summary**: Unnumbered `## Plan Summary` block directly under the Title — 3–5 bullets (what/why, key decision(s), most important file(s), priority/complexity)
+3. **Problem Statement**: Context and motivation
+4. **Proposed Solution**: High-level approach
+5. **Implementation Steps**: Detailed, actionable tasks organized in phases
+6. **Technical Considerations**: Dependencies, config, security, etc.
+7. **Testing Strategy**: Unit, integration, and manual tests
+8. **Documentation Updates**: What docs need updating
+9. **Acceptance Criteria**: Clear completion conditions
 
 The plan should be immediately actionable by a developer familiar with the codebase.
 
@@ -133,7 +135,7 @@ The plan should be immediately actionable by a developer familiar with the codeb
 
 Now proceed directly to plan validation **without waiting for the user**. The plan file was just created in this session — the path is already known.
 
-Read `.hublaunch/proceed-instructions.md` and execute the full validation workflow against the plan at `<path>` (substitute `<path>` with the actual plan file path you just created, e.g. `.hublaunch/plans/2025-12-29-14:30-feature-name.md`).
+Read `hula instructions proceed` and execute the full validation workflow against the plan at `<path>` (substitute `<path>` with the actual plan file path you just created, e.g. `.hublaunch/plans/2025-12-29-14:30-feature-name.md`).
 
 **Important adjustments for inline execution:**
 
@@ -144,5 +146,13 @@ Read `.hublaunch/proceed-instructions.md` and execute the full validation workfl
   > ⚠️ Auto-validation could not complete. Run `/hula-confirm <path>` to resume.
 
   where `<path>` is the plan file path.
+- **Finish with the Launch Offer** — after validation completes, execute the "Launch Offer" section of `hula instructions proceed` (issue-name resolution, the launch question, and launching on an affirmative reply). Never launch without an affirmative reply — **unless `--autoLaunch` was present in the original `$ARGUMENTS`** (see below).
+- **`--autoLaunch` skips the Launch Offer's confirmation sub-step only.** If `--autoLaunch` was present in `$ARGUMENTS`:
+  1. Still perform the Launch Offer's "1. Resolve the issue name" step exactly as documented there (conversation-mention wins, else the plan-filename-slug default) — resolution itself is unchanged.
+  2. Skip "2. Ask the launch question" and "3. Interpret the reply" entirely — do not ask, do not wait.
+  3. Print exactly (substituting the resolved name): `🚀 --autoLaunch set — launching as \`<issueName>\`…`
+  4. Immediately perform the Launch Offer's "4. Execute the launch" step: read `.agents/skills/hula-launch/SKILL.md` and execute its workflow with `<issueName> <planPath>`.
+  5. If `--test` and/or `--handoff <username>` were also present in `$ARGUMENTS`, pass them through to the launch — same as the Launch Offer's reply table does for a manual reply containing those flags.
+- **Without `--autoLaunch`**, behavior is completely unchanged: ask and wait as today.
 
-**Note:** The plan is saved locally. When you run `/hula-launch`, the plan is automatically synced to `origin/main` before the GitHub issue is created and the implementation begins — no separate upload step needed. `/hula-confirm` remains available as a standalone command for re-validation at any time.
+**Note:** The plan is saved locally. When you run `/hula-launch`, the plan is automatically synced to `origin/main` before the GitHub issue is created and the implementation begins — no separate upload step needed. Because validation ends with the Launch Offer, an affirmative reply runs the `/hula-launch` workflow for the user automatically; they can also decline and run `/hula-launch` themselves later. `/hula-confirm` remains available as a standalone command for re-validation at any time. If `--autoLaunch` was passed to `/hula-plan`, the launch runs automatically once validation completes — no reply needed.

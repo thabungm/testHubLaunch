@@ -1,1 +1,0 @@
-../../.agents/skills/hula-plan/SKILL.md

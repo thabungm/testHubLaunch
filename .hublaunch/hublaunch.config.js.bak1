@@ -1,0 +1,51 @@
+export const config = {
+  version: "1.12.0",  // hub-launch CLI version that generated this config; used to detect when to re-run `hula init`
+  // API Configuration
+  // hulaApiKey: "your-api-key-here",
+  // anthropicApiKey: "",  // Anthropic OAuth token (sk-ant-oat01-...) — get it at https://claude.ai/settings (requires a paid Claude.ai plan — Pro or Max)
+  // daytonaApiKey: "",  // Daytona API key — get your key at https://app.daytona.io (or set DAYTONA_API_KEY env var)
+  daytonaTier: 3,  // Daytona org tier (1–4). Tier 1=Starter, 2=Standard, 3=Pro, 4=Enterprise. Override with --daytona-tier or DAYTONA_TIER env var.
+  containerResources: { cpu: 2, memory: 8, disk: 10 },  // Per-sandbox resource override (cpu: 1–32, memory: 1–128 GiB, disk: 5–200 GiB). Override per-task with --container-cpu/memory/disk flags.
+  // updateNotificationUrl: "https://hooks.slack.com/services/T0/B0/secret",  // POSTed on every terminal task transition (Slack hosts get { text } body, others get generic JSON). See hula-server API.md.
+  // updateNotificationNameTag: "<@U12345>",  // Verbatim "initiated by" label in update notifications. Slack mention markup (<@U12345> member, <!subteam^ID> group) actually pings; bare text does not. Pairs with updateNotificationUrl. See hula-server API.md.
+  usageTier: "free",  // "free" | "pro" — updated automatically after subscription verification
+
+  // Editor configuration
+  editorCommand: "vsCode",
+
+  // Plan files configuration
+  planPath: ".hublaunch/plans",
+  trackingFile: ".hublaunch/trackedPlans.json",
+  createIssuesPreference: "chooseRecentPlan",
+  planChoices: 5,
+
+  // Tracking behavior
+  skipUntrackedPrompt: false,
+
+  // Polling / auto-refresh
+  pollingProvider: "hula-server",  // "hula-server" | "github"
+  pollIntervalSeconds: 60,  // Minimum 60
+
+  // Service configuration
+  services: {
+    "authentication": {
+      "provider": "clerk"
+    }
+  },
+
+  // Lifecycle hooks
+  hooks: {
+    "deploymentStartup": ".hublaunch/hooks/deploymentStartupScript.ts"
+  },
+
+  // Browser automation
+  browserHeadless: "auto",  // "auto" | "always" | "never"
+
+  // Worktree base path (used by /hula-fix, /hula-merge, /hula-upload)
+  worktreeBasePath: ".hula-worktrees",
+
+  // envVars: ["TEST_USER_EMAIL", "API_KEY"],  // Environment variables to forward to container (read from .env)
+
+  // Preserved custom settings
+  myCustomKey: "preserve-me",
+};

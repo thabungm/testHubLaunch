@@ -8,3 +8,6 @@ hublaunch.config.js
 
 # Node
 node_modules/
+
+# HubLaunch verify report/diff scratch files
+.hublaunch/tmp/

@@ -1,6 +1,6 @@
 ---
 name: hula-create
-description: Create a GitHub issue from the current plan. Use when the user asks to create an issue, submit, or push the plan to GitHub.
+description: "Legacy: create a GitHub issue from the current plan without launching (the modern flow is /hula-plan → launch). Use only when the user explicitly asks for hula-create."
 disable-model-invocation: true
 argument-hint: <tracking-name> [--handoff <user>] [--priority <level>] [--attach <files>]
 allowed-tools: Bash Read

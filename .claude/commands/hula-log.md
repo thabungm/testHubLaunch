@@ -1,1 +1,0 @@
-../../.agents/skills/hula-log/SKILL.md

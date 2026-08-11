@@ -1,6 +1,6 @@
 ---
 name: hula-fix
-description: Fix issues on a PR branch in an isolated worktree. Use when the user describes a bug or problem to fix on a PR.
+description: Fix gaps or bugs on a PR branch in an isolated worktree — your working tree is never touched. Use when the user describes a problem to fix on a PR.
 disable-model-invocation: true
 argument-hint: <problem description> or <owner/repo#N> <problem description>
 allowed-tools: Bash Read
@@ -68,7 +68,7 @@ Stop execution here. Do not proceed.
 Run the setup script — it handles issue lookup, validation, worktree creation, and session file writing in one terminal approval:
 
 ```bash
-bash .github/scripts/hula-fix-setup.sh <issue-number>
+hula script fix-setup -- <issue-number>
 ```
 
 The script outputs JSON with `status`, `issueTitle`, `prBranch`, `worktreePath`, and `sessionFile`.
@@ -111,7 +111,7 @@ Switch your working context:
 cd <worktreePath>
 ```
 
-Where `<worktreePath>` is the path returned by `hula-fix-setup.sh` in Step 2.
+Where `<worktreePath>` is the path returned by `hula script fix-setup` in Step 2.
 
 Apply fixes using the edit tool, making sure file paths are relative to (or inside) the worktree directory.
 
@@ -133,7 +133,7 @@ Progress display:
 Generate a commit message based on the issue number, files changed, and nature of changes, then run the commit script (one terminal approval):
 
 ```bash
-bash .github/scripts/hula-fix-commit.sh <issue-number> "fix(#42): <generated-message>"
+hula script fix-commit -- <issue-number> "fix(#42): <generated-message>"
 ```
 
 The script outputs JSON with `status`, `commitMessage`, and `filesChanged`.
@@ -161,7 +161,7 @@ Branch:   <pr-branch>
 Next steps:
 - Review the changes in the PR
 - Run tests if needed
-- When ready to merge: /hula-merge
+- When ready to merge: /hula-approve
 ```
 
 ## Error Handling

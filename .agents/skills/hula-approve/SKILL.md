@@ -1,6 +1,6 @@
 ---
-name: hula-merge
-description: Merge a PR — handles both local worktree and remote-only branches. Use when the user asks to merge, complete, or close a PR.
+name: hula-approve
+description: "Approve (step 2 of 2): merge the verified PR and clean everything up — branches, worktrees, and your local main. Use when the user approves the work or asks to merge, complete, or close a PR."
 disable-model-invocation: true
 argument-hint: "[issue-number]"
 allowed-tools: Bash Read
@@ -19,7 +19,7 @@ Your job is to:
 
 1. **Detect merge path** — check for local fix session + worktree, or fall back to remote-only
 2. **If local session exists**: commit/push changes, merge PR, clean up worktree + session
-3. **If remote-only**: merge PR directly via `hula merge`
+3. **If remote-only**: merge PR directly via `hula approve`
 4. **Report results**
 
 The main working tree is **never modified** — all local operations happen in the fix worktree (if one exists).
@@ -37,7 +37,7 @@ User input: $ARGUMENTS
 
 **Priority 2: Check user input**
 
-- Look for explicit issue number in the `/hula-merge` invocation (e.g. `/hula-merge 42` or `/hula-merge #42`)
+- Look for explicit issue number in the `/hula-approve` invocation (e.g. `/hula-approve 42` or `/hula-approve #42`)
 - Look for pattern: `YizYah/<repo>#\d+` or `#\d+` in user input
 
 **Priority 3: Check tracked issues**
@@ -52,8 +52,8 @@ User input: $ARGUMENTS
 ❌ No issue number found.
 
 Usage:
-- /hula-merge (auto-detect from fix session or tracked issues)
-- /hula-merge 42 (explicit issue number)
+- /hula-approve (auto-detect from fix session or tracked issues)
+- /hula-approve 42 (explicit issue number)
 ```
 
 Stop execution here. Do not proceed.
@@ -130,7 +130,7 @@ Suggested test command: npm test
 Generate a commit message based on the issue number, files changed, and nature of changes, then run the local-merge script — it handles commit, push, merge, worktree removal, and session cleanup in one terminal approval:
 
 ```bash
-hula script merge-local -- <issue-number> "<worktreePath>" "fix(#42): <generated-message>"
+hula script approve-local -- <issue-number> "<worktreePath>" "fix(#42): <generated-message>"
 ```
 
 The script outputs JSON with `status`, `committed`, `filesChanged`, `worktreeRemoved`, and `sessionCleaned`.
@@ -209,12 +209,12 @@ Follow this path when no local fix session/worktree exists. This is the common p
 Run the remote-merge script — it merges the PR directly on GitHub and cleans up any stale session file in one terminal approval:
 
 ```bash
-hula script merge-remote -- <issue-number>
+hula script approve-remote -- <issue-number>
 ```
 
 The script outputs JSON with `status`, `issueNumber`, `sessionCleaned`, and `localUpdated`.
 
-The script captures the `hula merge` CLI output and streams it to your terminal,
+The script captures the `hula approve` CLI output and streams it to your terminal,
 so the **specific reason and remediation** for any skipped local update appears
 above the JSON line. Read it — that's the source of truth for what happened.
 
@@ -308,7 +308,7 @@ The PR has conflicts with the base branch.
 Options:
 1. Resolve conflicts via GitHub PR web UI
 2. If local worktree exists: resolve in worktree at <worktreePath>
-3. Run /hula-merge again after resolving
+3. Run /hula-approve again after resolving
 ```
 
 ### CI Checks Failing
@@ -348,8 +348,8 @@ Try: cd <worktreePath> && git push
 Check the PR on GitHub: <PR-URL>
 ```
 
-For Path A: `Session preserved — run /hula-merge again after resolving.`
-For Path B: `Run /hula-merge again after resolving.`
+For Path A: `Session preserved — run /hula-approve again after resolving.`
+For Path B: `Run /hula-approve again after resolving.`
 
 ## Important Notes
 
@@ -362,7 +362,7 @@ The merge command automatically detects whether to use the local worktree path o
 
 This covers all scenarios:
 
-- `/hula-fix` → `/hula-merge` on the same machine (Path A)
+- `/hula-fix` → `/hula-approve` on the same machine (Path A)
 - The implementation agent created the PR on GitHub via `/hula-launch` (Path B)
 - Another contributor's PR (Path B)
 - Previous fix session already cleaned up (Path B)
@@ -377,14 +377,14 @@ The fix worktree is removed after a successful merge. This:
 
 On failure, the worktree is preserved so you can:
 
-- Fix issues and retry `/hula-merge`
+- Fix issues and retry `/hula-approve`
 - Manually clean up with: `git worktree remove "<path>" --force`
 - Or: `hula worktree cleanup`
 
 ### Session File Lifecycle
 
 - Created by `/hula-fix`
-- Preserved if `/hula-merge` fails (so you can retry)
+- Preserved if `/hula-approve` fails (so you can retry)
 - Deleted after successful merge OR cleaned up if stale (worktree missing)
 
 ## Session File Format

@@ -1,6 +1,6 @@
 ---
 name: hula-confirm
-description: Validate and refine an implementation plan created by hula-plan. Use when the user asks to confirm, validate, or refine a plan.
+description: Re-validate a plan until it's self-contained and launch-ready (runs automatically after /hula-plan). Use when the user asks to confirm, validate, or refine a plan they've edited.
 disable-model-invocation: true
 argument-hint: "[plan-file-path]"
 allowed-tools: Bash Read
@@ -10,9 +10,9 @@ You are an expert plan validator for the HubLaunch project, specializing in ensu
 
 ## Instructions
 
-Read the detailed confirmation guidelines from the workspace file:
+Read the detailed confirmation guidelines by running:
 
-`.hublaunch/proceed-instructions.md`
+`hula instructions proceed`
 
 Follow those instructions carefully to validate and enhance implementation plans.
 
@@ -83,6 +83,7 @@ Perform these validation checks:
 
 **Required sections checklist:**
 - ✅ Title (H1) - Clear and descriptive
+- ✅ Plan Summary - Unnumbered `## Plan Summary` block directly after Title, before Problem Statement (what/why, key decision(s), most important file(s), priority/complexity)
 - ✅ Problem Statement - Why this is needed
 - ✅ Requirements - Functional, technical, non-functional
 - ✅ Proposed Solution - High-level approach
@@ -95,6 +96,7 @@ Perform these validation checks:
 **Auto-fix:**
 - Add missing section headers with placeholder text
 - Note which sections need user input to complete
+- ⚠️ Preserve the `<details>` fold: newer plans wrap sections 6–11 (Edge Cases & Considerations through Dependencies & Related Work) in one `<details><summary><b>Implementation Detail</b></summary> … </details>` block. When auto-adding a missing section within 6–11, insert it **inside** that existing block — never append a flat, unwrapped header or flatten the wrapper. If the plan predates this format (no fold present), add the section normally.
 
 **Flag for user:**
 - Sections present but too vague or incomplete
@@ -155,6 +157,21 @@ Perform these validation checks:
 **Flag for user:**
 - Complex testing scenarios needing user input
 - Unclear test assertions or expected outcomes
+
+#### 2.6 Scope Check (One Plan = One PR)
+
+Every plan launches as exactly one PR, and each launch is sized for one PR's
+worth of sandbox time. Judge whether the plan fits: too many acceptance
+criteria (~10+), independently-mergeable phases (~4+), multiple unrelated
+subsystems, or "build a complete app" scope all signal an oversized plan.
+
+- **Fits one PR** → say nothing about scope (the check is invisible).
+- **Oversized** → STOP before the Launch Offer and propose splitting into a
+  numbered sequence of self-contained plans, launched one at a time as each
+  predecessor merges. Follow the "Scope: One Plan = One PR" section of
+  `hula instructions proceed` for the exact message format and split workflow.
+- The user can decline — validate as-is, record the oversize warning in the
+  summary, and continue.
 
 ### Step 3: Present Validation Summary & MCQ Questions
 
@@ -293,8 +310,10 @@ After updating the plan:
    - ✅ Edge case coverage
    - ✅ Testing strategy
    
-   **Next step:** Run `/hula-launch <branch-name>` to create the GitHub issue and start the AI-assisted implementation pipeline.
+   🚀 Are you ready to launch? (Unless you tell me otherwise, I'll use the issue name `<issueName>`.)
    ```
+
+   Then follow the **Launch Offer** section of `hula instructions proceed`: resolve `<issueName>`, ask the launch question, and on an affirmative reply execute the `/hula-launch` workflow with `<issueName> <planPath>` (plus any `--handoff`/`--test` flags). Never launch without an affirmative reply; on a negative or deferring reply, print the fallback message and stop.
 
 ## Important Guidelines
 
