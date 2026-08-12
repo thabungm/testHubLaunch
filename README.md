@@ -83,3 +83,45 @@ npm run typecheck        # tsc --noEmit, strict
 - `.env` stays uncommitted (gitignored); the webhook URL is never printed.
 - Node < 22.6 cannot run `.ts` directly — use the `npm run` scripts (which use
   `tsx`) or `npx tsx scripts/...`.
+
+## Health Check
+
+A non-intrusive Slack webhook health check that verifies the `SLACK_URL` is
+configured and the endpoint is alive — without posting a visible message to the
+channel by default.
+
+### Usage
+
+```bash
+npm run health           # Non-intrusive health report; exit 0 (healthy) or 1 (unhealthy)
+npm run health -- --html            # Also write a self-contained health.html page
+npm run health -- --html=status.html  # Write to a custom path
+npm run health -- --live            # Additionally send a real ping (channel-visible)
+npm run health -- --timeout=3000    # Custom timeout in ms (default 5000)
+npm run test:health     # Live + no-network test
+```
+
+### Checks Performed
+
+1. **Config (no network):** `SLACK_URL` is set and matches the Slack Incoming Webhook URL shape.
+2. **Reachability (non-intrusive):** probes the webhook with an empty `POST` (does **not** post a
+   visible message). Slack replies with HTTP 400 if the endpoint is live. Returns `unhealthy` if the
+   endpoint is dead (HTTP 404, `no_service`), unreachable (network error), or times out.
+3. **Live send (opt-in, `--live` only):** posts a real `✅ Slack health check <timestamp>` message
+   and asserts HTTP 200 + body `ok`. This is **channel-visible** and is off by default. Use only when
+   you need to verify end-to-end delivery, not for routine monitoring.
+
+### Exit Codes
+
+- Exit `0`: all checks pass (healthy).
+- Exit `1`: any check fails (unhealthy), or `SLACK_URL` is not set (no test run at all).
+
+### Notes
+
+- The default health run (without `--live`) performs a **non-intrusive probe** — it checks that the
+  webhook endpoint is alive but does **not** post a message to the channel, so it can be run
+  frequently and repeatedly.
+- The `SLACK_URL` value and its token path are never logged, printed to the HTML, or included in
+  error messages — only a redacted host (e.g. `hooks.slack.com/services/…`) is displayed.
+- The `--html` option writes a self-contained, static HTML page with no external scripts or styles,
+  so it opens offline and in any browser.
