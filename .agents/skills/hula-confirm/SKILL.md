@@ -313,7 +313,7 @@ After updating the plan:
    🚀 Are you ready to launch? (Unless you tell me otherwise, I'll use the issue name `<issueName>`.)
    ```
 
-   Then follow the **Launch Offer** section of `hula instructions proceed`: resolve `<issueName>`, ask the launch question, and on an affirmative reply execute the `/hula-launch` workflow with `<issueName> <planPath>` (plus any `--handoff`/`--test` flags). Never launch without an affirmative reply; on a negative or deferring reply, print the fallback message and stop.
+   Then follow the **Launch Offer** section of `hula instructions proceed`: resolve `<issueName>`, ask the launch question, and on an affirmative reply execute the `/hula-launch` workflow with `<issueName> <planPath>` (plus any `--handoff`/`--test` flags). Execute that workflow inline — read `.agents/skills/hula-launch/SKILL.md` and follow its steps in this session; never invoke it via the Skill tool (`disable-model-invocation: true` makes the harness reject the call). Never launch without an affirmative reply; on a negative or deferring reply, print the fallback message and stop.
 
 ## Important Guidelines
 

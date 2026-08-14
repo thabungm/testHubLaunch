@@ -139,6 +139,7 @@ Read `hula instructions proceed` and execute the full validation workflow agains
 
 **Important adjustments for inline execution:**
 
+- **Run every chained step inline — never via the Skill tool.** All hula skills set `disable-model-invocation: true`, so invoking one as a skill (e.g. `Skill(hula-confirm)` or `Skill(hula-launch)`) is rejected by the harness with "blocked by disable-model-invocation". Chaining works by reading the instructions (`hula instructions proceed`, `.agents/skills/hula-launch/SKILL.md`) and executing their steps directly in this session.
 - **Skip Step 1 (file location)** — the plan path is `<path>`. Do not ask "Is this correct?"
 - **Execute Step 2 onwards** — Comprehensive Validation Analysis, auto-fix, MCQ questions if needed, plan update, iterate until quality bar is met.
 - **Carry forward all context** from this planning session — you have full knowledge of the decisions made, which may help resolve validation questions.

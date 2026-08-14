@@ -257,9 +257,9 @@ If an identifier is empty, fall back to showing the `cliOutput` field.
 
 ## Important Notes
 
-- Do NOT pre-check credentials. The CLI resolves the Anthropic OAuth token and
-  GitHub token from flags/config/env and reports a clear error if any are
-  missing; the wrappers surface it.
+- Do NOT pre-check credentials. The CLI resolves the LLM provider credential
+  (claude | openai | openrouter) and GitHub token from flags/config/env and
+  reports a clear error if any are missing; the wrappers surface it.
 - Do NOT echo secrets.
 - Generated action files live under `.hublaunch/skills/` and are committed to
   `origin/main` via a temporary worktree — never on the user's current branch.
