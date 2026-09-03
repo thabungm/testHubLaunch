@@ -1,0 +1,7 @@
+
+> test:contact
+> tsx scripts/test-contact.ts
+
+PASS (live send): HTTP 200, body: ok
+PASS (validation): rejected 4 invalid fields
+ALL PASS
