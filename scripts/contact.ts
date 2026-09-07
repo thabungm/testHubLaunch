@@ -65,15 +65,7 @@ export function buildSlackPayload(input: ContactInput): object {
 export async function submitContactForm(
   input: ContactInput,
 ): Promise<{ status: number; body: string }> {
-  let url = process.env.SLACK_URL?.trim() ?? "";
-  // Remove trailing comma first (may come before or after quotes)
-  if (url.endsWith(",")) {
-    url = url.slice(0, -1);
-  }
-  // Remove surrounding quotes if present
-  if ((url.startsWith('"') && url.endsWith('"')) || (url.startsWith("'") && url.endsWith("'"))) {
-    url = url.slice(1, -1);
-  }
+  const url = process.env.SLACK_URL?.trim();
   if (!url) throw new Error("SLACK_URL environment variable is not set");
 
   validateContact(input); // throws ContactValidationError; no send on failure
