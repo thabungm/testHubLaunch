@@ -59,6 +59,56 @@ npm run test:contact     # or: tsx scripts/test-contact.ts
 Prints `ALL PASS` and exits `0` only if both pass. If `SLACK_URL` is unset it
 prints `FAIL: SLACK_URL not set — cannot run live test` and exits `1`.
 
+### Health check — verify Slack webhook is alive
+
+```bash
+npm run health                    # print text report, exit 0 (healthy) or 1 (unhealthy)
+npm run health -- --html          # also write a self-contained health.html page
+npm run health -- --html=status   # write to a custom path
+npm run health -- --live          # include a real send ping (channel-visible)
+npm run health -- --timeout=3000  # custom timeout in milliseconds
+```
+
+The health check probes the `SLACK_URL` webhook **without posting a visible message**
+by default. Two checks are performed:
+
+1. **Config check** — `SLACK_URL` is set and matches the Slack webhook shape.
+2. **Reachability check** — sends an empty POST to verify the endpoint is alive.
+
+Both checks must pass for `overall` to be `healthy` and exit code to be `0`.
+
+```bash
+npm run health              # exit 0 if healthy, 1 if unhealthy
+
+# Output example (healthy):
+# Slack Health — HEALTHY
+# Target:  hooks.slack.com/services/…
+# Checked: 2026-07-17T19:54:00.000Z
+#
+#   [OK]   config        SLACK_URL is set and is a Slack webhook URL
+#   [OK]   reachability  webhook endpoint is live (rejected empty payload)   (123ms)
+```
+
+The `--live` flag adds a third check: sends a real message to the channel
+(visible to all), asserts HTTP 200, and marks the `live` check as healthy.
+This is **opt-in only** so routine health checks never pollute the channel.
+
+The `--html` flag writes a self-contained static HTML page (no external
+assets, no server) that displays the same report in the browser.
+
+### Live test — health check
+
+```bash
+npm run test:health      # or: tsx scripts/test-health.ts
+```
+
+Tests the health check module with:
+- **Test 1 (no network):** config validation when `SLACK_URL` is unset or invalid.
+- **Test 2 (live):** reachability probe against the real webhook, confirming it is
+  online and `overall` is `healthy`.
+
+Prints `ALL PASS` and exits `0` only if all pass.
+
 ### Type-check
 
 ```bash
