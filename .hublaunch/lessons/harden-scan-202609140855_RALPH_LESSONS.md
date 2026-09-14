@@ -24,6 +24,20 @@
 ## Next Steps
 - None. Feedback-mode audit delivered.
 
+## Follow-up: harness passes `-- --concurrency=2` to `pnpm check`, breaks tsc (2026-09-14)
+- Root cause: the harness invokes `pnpm check -- --concurrency=2` (a flag meant
+  for parallel test runners), and pnpm forwards everything after `--` straight
+  onto the script's command line. Since `check` was `tsc --noEmit`, tsc received
+  `tsc --noEmit -- --concurrency=2` and failed with TS5023 (unknown compiler
+  option), even though there's no real type error in the codebase.
+- Fix: replaced the `check` script with `node scripts/check.mjs`, a tiny wrapper
+  that spawns `tsc --noEmit` with a fixed, hardcoded arg list and ignores
+  whatever extra CLI args get forwarded to it. This makes `check` robust to any
+  future harness flags (concurrency, reporters, etc.) without needing to know
+  about them in advance.
+- Verified: `pnpm check`, `pnpm check -- --concurrency=2`, and `pnpm typecheck`
+  all exit 0 with zero errors.
+
 ## Follow-up: `pnpm check` command not found (2026-09-14)
 - Root cause: this repo's ralph.md has no `RALPH_CHECK_COMMANDS` block (it was
   overwritten with the generic harden.md loop template by the prior harden
