@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "ping": "tsx scripts/ping.ts",
     "contact": "tsx scripts/contact.ts",
     "test:contact": "tsx scripts/test-contact.ts",
     "typecheck": "tsc --noEmit",
