@@ -23,3 +23,16 @@
 
 ## Next Steps
 - None. Feedback-mode audit delivered.
+
+## Follow-up: `pnpm check` command not found (2026-09-14)
+- Root cause: this repo's ralph.md has no `RALPH_CHECK_COMMANDS` block (it was
+  overwritten with the generic harden.md loop template by the prior harden
+  commit, losing the project-specific `npm run typecheck` command that used to
+  live there). `run_check_step` in ralph-run.sh falls back to literal `pnpm check`
+  when that block is absent, and package.json only defined `typecheck`, not `check`.
+- Fix: added a `"check": "tsc --noEmit"` script alias to package.json (same as
+  `typecheck`). No ESLint config exists in this repo, so `check` is TS-only.
+- Verified: `pnpm check` and `pnpm typecheck` both pass with zero errors/warnings.
+- If this recurs, also consider restoring a `RALPH_CHECK_COMMANDS` block in
+  ralph.md pointing at `npm run typecheck` so the harness doesn't depend on a
+  `check` script existing at all.
