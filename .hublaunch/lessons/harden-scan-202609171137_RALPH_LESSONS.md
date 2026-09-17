@@ -54,3 +54,14 @@ Hula team — DO NOT edit (header comment says so).
 
 ## Next Steps
 - Implement fixes in contact.ts, run typecheck, open PR.
+
+## Follow-up: `pnpm check` not found (2026-09-17)
+- Harness invoked `pnpm check`, but `package.json` only defined `typecheck`
+  (no `check` script) — pnpm's recursive-exec failed before any TS/ESLint
+  code was even run (`ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL`).
+- Not a code bug: `pnpm typecheck` (`tsc --noEmit`) was already clean, and
+  there is no ESLint config/devDependency in this repo at all.
+- FIX: added `"check": "tsc --noEmit"` alongside `"typecheck"` in
+  `package.json` scripts so `pnpm check` succeeds. If ESLint is ever added
+  to this repo, fold it into the `check` script too (e.g. `tsc --noEmit &&
+  eslint .`).

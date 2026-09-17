@@ -6,6 +6,7 @@
     "contact": "tsx scripts/contact.ts",
     "test:contact": "tsx scripts/test-contact.ts",
     "typecheck": "tsc --noEmit",
+    "check": "tsc --noEmit",
     "build": "node scripts/build.mjs"
   },
   "devDependencies": {
