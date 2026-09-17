@@ -62,9 +62,11 @@ export function buildSlackPayload(input: ContactInput): object {
   };
 }
 
-export async function submitContactForm(
-  input: ContactInput,
-): Promise<{ status: number; body: string }> {
+// Resolve SLACK_URL from the environment and validate it before use. The
+// webhook URL is itself a secret; sending it anywhere but an https endpoint
+// would leak it in cleartext, and an unvalidated URL allows requests to
+// arbitrary schemes/hosts (SSRF). We therefore require a well-formed https URL.
+export function resolveSlackUrl(): string {
   let url = process.env.SLACK_URL?.trim() ?? "";
   // Remove trailing comma first (may come before or after quotes)
   if (url.endsWith(",")) {
@@ -76,12 +78,36 @@ export async function submitContactForm(
   }
   if (!url) throw new Error("SLACK_URL environment variable is not set");
 
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error("SLACK_URL is not a valid URL");
+  }
+  // Enforce https so the secret webhook is never sent over cleartext and to
+  // block non-http(s) schemes (file:, gopher:, etc.).
+  if (parsed.protocol !== "https:") {
+    throw new Error("SLACK_URL must use https");
+  }
+  return parsed.toString();
+}
+
+// Abort the Slack request if it stalls, so a hung endpoint can't block the
+// caller indefinitely.
+const SLACK_TIMEOUT_MS = 10_000;
+
+export async function submitContactForm(
+  input: ContactInput,
+): Promise<{ status: number; body: string }> {
+  const url = resolveSlackUrl();
+
   validateContact(input); // throws ContactValidationError; no send on failure
 
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(buildSlackPayload(input)),
+    signal: AbortSignal.timeout(SLACK_TIMEOUT_MS),
   });
   return { status: res.status, body: await res.text() };
 }
