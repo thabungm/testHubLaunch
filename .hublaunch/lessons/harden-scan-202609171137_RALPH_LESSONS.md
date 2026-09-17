@@ -65,3 +65,23 @@ Hula team — DO NOT edit (header comment says so).
   `package.json` scripts so `pnpm check` succeeds. If ESLint is ever added
   to this repo, fold it into the `check` script too (e.g. `tsc --noEmit &&
   eslint .`).
+
+## Follow-up: TS5023 `Unknown compiler option '--'` on `pnpm check` (2026-09-17)
+- Harness actually invokes `pnpm check -- --concurrency=2` (same deploy-tooling
+  pattern already documented for `build` — see `scripts/build.mjs` header
+  comment). pnpm forwards the trailing `-- --concurrency=2` straight onto the
+  script's command line, so `"check": "tsc --noEmit"` became
+  `tsc --noEmit -- --concurrency=2` and `tsc` rejected both `--` and
+  `--concurrency=2` as unknown compiler options (TS5023).
+- `scripts/build.mjs` already had a fix for this exact issue (a Node wrapper
+  that ignores `process.argv` and always spawns a fixed `tsc --noEmit`
+  command) — `check`/`typecheck` just weren't using the same pattern yet.
+- FIX: added `scripts/check.mjs` (same fixed-args wrapper as `build.mjs`) and
+  pointed both `"check"` and `"typecheck"` at `node scripts/check.mjs`.
+  Verified `pnpm check -- --concurrency=2`, `pnpm check`, and `pnpm typecheck`
+  all pass cleanly.
+- LESSON: whenever any npm script in this repo wraps `tsc` (or any CLI that
+  errors on unrecognized flags) directly, assume deploy tooling may append
+  `-- --concurrency=2` and use the `spawnSync` wrapper pattern from
+  `build.mjs`/`check.mjs` instead of calling the CLI directly in the script
+  string.
