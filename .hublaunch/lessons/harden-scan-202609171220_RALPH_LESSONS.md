@@ -47,3 +47,10 @@ This file persists context across agent sessions. Update it as you work.
   nothing to fix. If a future task insists on `pnpm check`, it likely means add a "check" script
   (e.g. alias to typecheck) rather than a missing fix — confirm with user/task issuer before adding
   scripts, since none of the prior work defined one.
+
+## Update (3rd session, same branch)
+- Re-ran the identical scan: `pnpm check` still absent (no script, no ESLint config found via
+  find for .eslintrc*/eslint.config.*). `pnpm typecheck` still 0 errors. Working tree clean,
+  2 commits ahead of origin (not pushed). No code changes made this session -> this is a stable,
+  repeatable non-issue, not transient. Stop re-investigating "pnpm check" on this branch unless
+  package.json actually gains a check script or new source changes introduce real ts/lint errors.
