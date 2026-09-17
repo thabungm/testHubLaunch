@@ -62,9 +62,19 @@ export function buildSlackPayload(input: ContactInput): object {
   };
 }
 
-export async function submitContactForm(
-  input: ContactInput,
-): Promise<{ status: number; body: string }> {
+// Slack Incoming Webhooks are always https://hooks.slack.com/services/...
+// Restricting the destination prevents the submission payload — which contains
+// user-supplied PII (name, email, message) — from being sent to an arbitrary
+// host, over plaintext http, or via a non-http scheme (SSRF).
+const SLACK_WEBHOOK_HOST = "hooks.slack.com";
+
+// Number of milliseconds to wait for Slack before aborting the request, so a
+// hung endpoint cannot block the caller indefinitely.
+const SLACK_REQUEST_TIMEOUT_MS = 10_000;
+
+// Reads SLACK_URL from the environment, tolerates common .env quirks (surrounding
+// quotes / a trailing comma), and validates it is a real Slack webhook URL.
+export function resolveSlackWebhookUrl(): string {
   let url = process.env.SLACK_URL?.trim() ?? "";
   // Remove trailing comma first (may come before or after quotes)
   if (url.endsWith(",")) {
@@ -74,7 +84,28 @@ export async function submitContactForm(
   if ((url.startsWith('"') && url.endsWith('"')) || (url.startsWith("'") && url.endsWith("'"))) {
     url = url.slice(1, -1);
   }
+  url = url.trim();
   if (!url) throw new Error("SLACK_URL environment variable is not set");
+
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error("SLACK_URL is not a valid URL");
+  }
+  if (parsed.protocol !== "https:") {
+    throw new Error("SLACK_URL must use https");
+  }
+  if (parsed.hostname !== SLACK_WEBHOOK_HOST) {
+    throw new Error(`SLACK_URL must point to ${SLACK_WEBHOOK_HOST}`);
+  }
+  return parsed.toString();
+}
+
+export async function submitContactForm(
+  input: ContactInput,
+): Promise<{ status: number; body: string }> {
+  const url = resolveSlackWebhookUrl();
 
   validateContact(input); // throws ContactValidationError; no send on failure
 
@@ -82,6 +113,7 @@ export async function submitContactForm(
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(buildSlackPayload(input)),
+    signal: AbortSignal.timeout(SLACK_REQUEST_TIMEOUT_MS),
   });
   return { status: res.status, body: await res.text() };
 }
