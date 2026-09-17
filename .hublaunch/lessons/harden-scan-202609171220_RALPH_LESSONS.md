@@ -39,3 +39,11 @@ This file persists context across agent sessions. Update it as you work.
 
 ## Next Steps
 <!-- What should be done next -->
+
+## Update (later session, same branch)
+- Issue report said `pnpm check` -> "Command 'check' not found". Confirmed: package.json has
+  no "check" script (only contact, test:contact, typecheck, build). No ESLint config in repo either.
+- Ran `pnpm typecheck` (tsc --noEmit) as the closest equivalent -> 0 errors. Working tree clean,
+  nothing to fix. If a future task insists on `pnpm check`, it likely means add a "check" script
+  (e.g. alias to typecheck) rather than a missing fix — confirm with user/task issuer before adding
+  scripts, since none of the prior work defined one.
