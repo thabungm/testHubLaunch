@@ -58,3 +58,12 @@ This file persists context across agent sessions. Update it as you work.
   so there are no lint warnings to produce or fix.
 - Ran `pnpm typecheck` (tsc --noEmit, strict mode): zero errors, zero warnings.
   Working tree was already clean at HEAD (e244c05). Nothing needed fixing.
+
+## check-loop note (re-confirmed at HEAD 0937556)
+- Same `ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL Command "check" not found` false alarm
+  recurred on a later commit (0937556, "fix: TypeScript/ESLint errors (auto-fix
+  attempt 1)"). Re-verified: package.json still has no `check` script, no
+  pnpm-workspace.yaml, no ESLint config/devDependency. `pnpm typecheck` passes
+  with zero errors. Working tree clean, no changes needed. This is a recurring
+  false positive from whatever harness runs `pnpm check` by default — the fix
+  is to run `pnpm typecheck` instead, not to add a `check` script.
