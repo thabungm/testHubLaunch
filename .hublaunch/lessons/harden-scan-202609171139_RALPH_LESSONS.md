@@ -48,3 +48,13 @@ This file persists context across agent sessions. Update it as you work.
 1. Add https URL validation + fetch timeout to scripts/contact.ts.
 2. Run `npm run typecheck`. Ensure passes.
 3. Open PR titled `harden: security audit . (2026-09-17)`.
+
+## check-loop note (2026-09-17)
+- `pnpm check` is not a defined script in package.json (only `contact`,
+  `test:contact`, `typecheck`, `build`), and there's no pnpm-workspace.yaml —
+  it's a single-package repo. pnpm's own "did you mean" suggestion of
+  `pnpm typecheck` is correct; use that instead of `pnpm check`.
+- No ESLint config exists in the repo (no .eslintrc*, no eslint devDependency),
+  so there are no lint warnings to produce or fix.
+- Ran `pnpm typecheck` (tsc --noEmit, strict mode): zero errors, zero warnings.
+  Working tree was already clean at HEAD (e244c05). Nothing needed fixing.
