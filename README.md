@@ -24,7 +24,11 @@ npm install
 
 `SLACK_URL` is a Slack Incoming Webhook URL. It is a **secret** and is never
 logged. The scripts read it from `process.env` only — they do **not** parse
-`.env`. Export it first (`.env` is gitignored):
+`.env`. For safety it is validated before every send: it must be an **HTTPS**
+URL on the `hooks.slack.com` host, otherwise the submission is rejected without
+any network call. This prevents a misconfigured or injected `SLACK_URL` from
+exfiltrating submitted data to an arbitrary endpoint (SSRF). Export it first
+(`.env` is gitignored):
 
 ```bash
 set -a; source .env; set +a
@@ -75,8 +79,11 @@ npm run typecheck        # tsc --noEmit, strict
 - `buildSlackPayload(input)` — builds the Block Kit message (header + Name/Email
   fields + Message section) with a `text` fallback; escapes `&`, `<`, `>` in user
   input and truncates to Slack's limits.
-- `submitContactForm(input)` — validates, then POSTs to `SLACK_URL`; resolves with
-  `{ status, body }` (Slack returns `200` + `ok` on success).
+- `resolveSlackUrl()` — reads and validates `SLACK_URL` (HTTPS + `hooks.slack.com`
+  host); throws a generic error (never echoing the secret) if it is missing or invalid.
+- `submitContactForm(input)` — resolves+validates `SLACK_URL`, validates the input,
+  then POSTs to Slack with a 10s timeout; resolves with `{ status, body }` (Slack
+  returns `200` + `ok` on success).
 
 ## Notes
 
