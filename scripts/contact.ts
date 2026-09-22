@@ -62,6 +62,20 @@ export function buildSlackPayload(input: ContactInput): object {
   };
 }
 
+function parsePositiveIntEnv(name: string, fallback: number): number {
+  const raw = process.env[name]?.trim();
+  if (!raw) return fallback;
+  const n = Number.parseInt(raw, 10);
+  return Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
+function parseNonNegativeIntEnv(name: string, fallback: number): number {
+  const raw = process.env[name]?.trim();
+  if (!raw) return fallback;
+  const n = Number.parseInt(raw, 10);
+  return Number.isFinite(n) && n >= 0 ? n : fallback;
+}
+
 export async function submitContactForm(
   input: ContactInput,
 ): Promise<{ status: number; body: string }> {
@@ -78,12 +92,39 @@ export async function submitContactForm(
 
   validateContact(input); // throws ContactValidationError; no send on failure
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(buildSlackPayload(input)),
-  });
-  return { status: res.status, body: await res.text() };
+  const maxAttempts = parsePositiveIntEnv("CONTACT_RETRY_MAX_ATTEMPTS", 3);
+  const baseDelayMs = parseNonNegativeIntEnv("CONTACT_RETRY_BASE_DELAY_MS", 500);
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(buildSlackPayload(input)),
+      });
+    } catch (err) {
+      if (attempt === maxAttempts) throw err;
+      const delayMs = baseDelayMs * 2 ** (attempt - 1);
+      console.error(
+        `Contact send attempt ${attempt}/${maxAttempts} failed (${(err as Error).message}); retrying in ${delayMs}ms...`,
+      );
+      await new Promise((r) => setTimeout(r, delayMs));
+      continue;
+    }
+
+    const retryable = res.status === 429 || (res.status >= 500 && res.status <= 599);
+    if (!retryable || attempt === maxAttempts) {
+      return { status: res.status, body: await res.text() };
+    }
+    const delayMs = baseDelayMs * 2 ** (attempt - 1);
+    console.error(
+      `Contact send attempt ${attempt}/${maxAttempts} failed (HTTP ${res.status}); retrying in ${delayMs}ms...`,
+    );
+    await new Promise((r) => setTimeout(r, delayMs));
+  }
+  // Unreachable: the loop always returns or throws by the final iteration.
+  throw new Error("submitContactForm: exhausted retry attempts without a result");
 }
 
 async function main(): Promise<void> {
