@@ -65,6 +65,34 @@ prints `FAIL: SLACK_URL not set — cannot run live test` and exits `1`.
 npm run typecheck        # tsc --noEmit, strict
 ```
 
+## Retry behavior
+
+`submitContactForm()` uses exponential backoff to retry on transient failures:
+
+- **Default:** 3 total attempts (1 initial + 2 retries) with backoff delays of 500ms
+  then 1000ms between attempts. First attempt succeeds → no delays added.
+- **Retried on:** thrown network errors (e.g., connection lost), HTTP 429 (rate
+  limit), or any HTTP 5xx (server error).
+- **Not retried on:** any other HTTP status (including 2xx, 3xx, and non-429 4xx
+  errors), and `ContactValidationError` (validation failures never attempt the
+  network).
+
+Override the schedule with environment variables (both optional):
+
+```bash
+# Force single-attempt (no retry) behavior — equivalent to pre-v2 behavior
+CONTACT_RETRY_MAX_ATTEMPTS=1 npm run contact
+
+# Faster backoff for testing (10ms then 20ms delays)
+CONTACT_RETRY_BASE_DELAY_MS=10 npm run test:contact
+
+# Both together: 5 attempts with 200ms base delay (200ms, 400ms, 800ms, 1600ms)
+CONTACT_RETRY_MAX_ATTEMPTS=5 CONTACT_RETRY_BASE_DELAY_MS=200 npm run contact
+```
+
+- `CONTACT_RETRY_MAX_ATTEMPTS` (positive integer, default `3`): total attempts.
+- `CONTACT_RETRY_BASE_DELAY_MS` (non-negative integer, default `500`): base delay in milliseconds for exponential backoff (`base * 2^(attempt-1)` between attempts).
+
 ## API (`scripts/contact.ts`)
 
 - `interface ContactInput { name; email; subject; body }`
