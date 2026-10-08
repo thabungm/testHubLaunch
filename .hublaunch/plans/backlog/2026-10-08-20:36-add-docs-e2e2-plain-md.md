@@ -45,6 +45,28 @@ The repository needs a one-line docs file, `docs/e2e2-plain.md`, which confirms 
 
 - `docs/e2e2-plain.md` exists, is committed, and contains exactly `Plain launch.` followed by a single newline.
 
+## Detailed Requirements
+
+#### Functional Requirements
+
+1. **New docs file**
+   - Path: `docs/e2e2-plain.md`, relative to the repository root.
+   - Content: the single line `Plain launch.` followed by exactly one LF (`\n`) newline. Nothing else, so no heading, front matter, or blank lines.
+
+#### Technical Requirements
+
+- **Technology/Framework**: Plain markdown text file. No TypeScript, scripts, or build changes.
+- **Location**: `docs/` directory at the repository root (new directory).
+- **Dependencies**: None.
+- **Constraints**: LF line ending (not CRLF). The file size is exactly 14 bytes.
+
+#### Non-Functional Requirements
+
+- **Performance**: Not applicable.
+- **Security**: Not applicable. The file is static text with no secrets.
+- **Backwards Compatibility**: No existing file changes, so nothing can break.
+- **Error Handling**: Not applicable. No runtime code is added.
+
 ## Proposed Solution
 
 **High-level approach**: Create the `docs/` directory and write one file with fixed content. Make no other changes.
@@ -135,10 +157,10 @@ No other files change.
 
 1. **Test Case 1**: Run `cat docs/e2e2-plain.md`.
    - Expected result: output is exactly `Plain launch.`
-2. **Test Case 2**: Run `wc -c docs/e2e2-plain.md`.
-   - Expected result: `14 docs/e2e2-plain.md`.
-3. **Test Case 3**: Run `wc -l docs/e2e2-plain.md`.
-   - Expected result: `1 docs/e2e2-plain.md`.
+2. **Test Case 2**: Run `wc -c < docs/e2e2-plain.md`.
+   - Expected result: `14` (macOS may pad it with leading spaces).
+3. **Test Case 3**: Run `wc -l < docs/e2e2-plain.md`.
+   - Expected result: `1` (macOS may pad it with leading spaces).
 4. **Test Case 4**: Run `git diff --stat main` on the implementation branch.
    - Expected result: exactly one file changed, `docs/e2e2-plain.md`, with 1 insertion (excluding the plan file committed by HubLaunch under `.hublaunch/plans/backlog/`).
 
