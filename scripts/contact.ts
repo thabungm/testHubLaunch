@@ -1,6 +1,7 @@
 export interface ContactInput {
   name: string;
   email: string;
+  phone?: string;
   subject: string;
   body: string;
 }
@@ -15,17 +16,20 @@ export class ContactValidationError extends Error {
 }
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+const PHONE_RE = /^\+\d{8,15}$/;
 
 export function validateContact(input: ContactInput): void {
   const issues: string[] = [];
   const name = input.name?.trim() ?? "";
   const email = input.email?.trim() ?? "";
+  const phone = input.phone?.trim() ?? "";
   const subject = input.subject?.trim() ?? "";
   const body = input.body?.trim() ?? "";
 
   if (!name) issues.push("name is required");
   if (!email) issues.push("email is required");
   else if (!EMAIL_RE.test(email)) issues.push("email is invalid");
+  if (phone && !PHONE_RE.test(phone)) issues.push("phone is invalid");
   if (!subject) issues.push("subject is required");
   if (!body) issues.push("body is required");
 
@@ -40,23 +44,24 @@ function esc(s: string): string {
 export function buildSlackPayload(input: ContactInput): object {
   const name = esc(input.name.trim());
   const email = esc(input.email.trim());
+  const phone = esc(input.phone?.trim() ?? "");
   const subject = esc(input.subject.trim());
   const body = esc(input.body.trim());
 
   const header = `📬 New Contact: ${subject}`.slice(0, 150);
   const message = body.slice(0, 2900);
 
+  const fields: { type: "mrkdwn"; text: string }[] = [
+    { type: "mrkdwn", text: `*Name:*\n${name}` },
+    { type: "mrkdwn", text: `*Email:*\n${email}` },
+  ];
+  if (phone) fields.push({ type: "mrkdwn", text: `*Phone:*\n${phone}` });
+
   return {
     text: `New contact from ${name} (${email}): ${subject}`,
     blocks: [
       { type: "header", text: { type: "plain_text", text: header } },
-      {
-        type: "section",
-        fields: [
-          { type: "mrkdwn", text: `*Name:*\n${name}` },
-          { type: "mrkdwn", text: `*Email:*\n${email}` },
-        ],
-      },
+      { type: "section", fields },
       { type: "section", text: { type: "mrkdwn", text: `*Message:*\n${message}` } },
     ],
   };
