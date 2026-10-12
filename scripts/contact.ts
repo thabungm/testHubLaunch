@@ -1,3 +1,5 @@
+import { checkRateLimit, recordSuccess } from "./rate-limit.ts";
+
 export interface ContactInput {
   name: string;
   email: string;
@@ -11,6 +13,24 @@ export class ContactValidationError extends Error {
     super(`Invalid contact submission: ${issues.join("; ")}`);
     this.name = "ContactValidationError";
     this.issues = issues;
+  }
+}
+
+export class RateLimitError extends Error {
+  email: string;
+  limit: number;
+  windowMs: number;
+  retryAfterMs: number;
+  constructor(email: string, limit: number, windowMs: number, retryAfterMs: number) {
+    super(
+      `Rate limit exceeded for ${email}: max ${limit} submissions per ${windowMs}ms. ` +
+        `Try again in ${Math.ceil(retryAfterMs / 1000)}s.`,
+    );
+    this.name = "RateLimitError";
+    this.email = email;
+    this.limit = limit;
+    this.windowMs = windowMs;
+    this.retryAfterMs = retryAfterMs;
   }
 }
 
@@ -78,11 +98,27 @@ export async function submitContactForm(
 
   validateContact(input); // throws ContactValidationError; no send on failure
 
+  // Enforce the per-email rate limit before any network call. Only successful
+  // (HTTP 200) sends consume quota, so the check reads state but records nothing.
+  const now = Date.now();
+  const breach = checkRateLimit(input.email, now);
+  if (breach) {
+    throw new RateLimitError(
+      input.email.trim().toLowerCase(),
+      breach.limit,
+      breach.windowMs,
+      breach.retryAfterMs,
+    );
+  }
+
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(buildSlackPayload(input)),
   });
+  if (res.status === 200) {
+    recordSuccess(input.email, now);
+  }
   return { status: res.status, body: await res.text() };
 }
 
@@ -105,6 +141,8 @@ async function main(): Promise<void> {
     if (err instanceof ContactValidationError) {
       console.error("Validation failed:");
       for (const i of err.issues) console.error(`  - ${i}`);
+    } else if (err instanceof RateLimitError) {
+      console.error(`Rate limited: ${err.message}`);
     } else {
       console.error(`Contact error: ${(err as Error).message}`);
     }

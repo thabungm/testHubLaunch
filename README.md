@@ -69,14 +69,54 @@ npm run typecheck        # tsc --noEmit, strict
 
 - `interface ContactInput { name; email; subject; body }`
 - `class ContactValidationError extends Error` — carries `issues: string[]`.
+- `class RateLimitError extends Error` — thrown when a sender exceeds the
+  per-email limit; carries `email`, `limit`, `windowMs`, and `retryAfterMs`
+  (ms until the next send would be allowed).
 - `validateContact(input)` — trims all fields; requires non-empty `name`,
   `subject`, `body`; requires `email` to match `/^[^@\s]+@[^@\s]+\.[^@\s]+$/`.
   Collects **all** issues and throws before any network call.
 - `buildSlackPayload(input)` — builds the Block Kit message (header + Name/Email
   fields + Message section) with a `text` fallback; escapes `&`, `<`, `>` in user
   input and truncates to Slack's limits.
-- `submitContactForm(input)` — validates, then POSTs to `SLACK_URL`; resolves with
-  `{ status, body }` (Slack returns `200` + `ok` on success).
+- `submitContactForm(input)` — validates, enforces the per-email rate limit
+  (throwing `RateLimitError` on breach **before** any network call), then POSTs
+  to `SLACK_URL`; resolves with `{ status, body }` (Slack returns `200` + `ok`
+  on success).
+
+## Rate limiting
+
+`submitContactForm()` throttles submissions **per sender email** using a
+sliding window. The email is normalized with `trim().toLowerCase()`, and the
+check runs after validation but before the Slack POST, so invalid submissions
+never consume quota. Only **successful (HTTP 200)** sends count toward the
+limit — failed or errored POSTs do not. On breach it throws a `RateLimitError`
+immediately (no delay, no queue).
+
+Counter state is persisted to a JSON file so the limit survives across the
+short-lived CLI processes. The file maps each email to its recent success
+timestamps; emptied entries are pruned.
+
+Configuration (read from `process.env` on every call):
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `CONTACT_RATE_LIMIT_MAX` | `5` | Max successful sends per email per window. |
+| `CONTACT_RATE_LIMIT_WINDOW_MS` | `60000` | Window length in ms. |
+| `CONTACT_RATE_LIMIT_FILE` | `.contact-rate-limit.json` | Counter file, resolved against `process.cwd()`. |
+
+Invalid, non-numeric, or non-positive `MAX`/`WINDOW_MS` values silently fall
+back to their defaults. The default counter file is **gitignored** so it is
+never committed, and `RateLimitError` messages include the (user-supplied)
+email but never `SLACK_URL`.
+
+- **Smoke-script caveat:** `npm run contact` always uses the fixed email
+  `test@example.com`, so running it more than 5 times within a minute will be
+  rate-limited (prints `Rate limited: …`, exits `1`). The live test
+  (`npm run test:contact`) isolates itself by pointing `CONTACT_RATE_LIMIT_FILE`
+  at a fresh temp file per run, so it is never affected.
+- **Known limitation:** there is no cross-process file locking; concurrent runs
+  may race on the counter file (an accepted trade-off — writes are atomic via a
+  temp file + `rename`).
 
 ## Notes
 
