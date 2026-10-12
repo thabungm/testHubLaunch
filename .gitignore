@@ -11,3 +11,6 @@ node_modules/
 
 # HubLaunch verify report/diff scratch files
 .hublaunch/tmp/
+
+# Contact rate-limit counter state
+.contact-rate-limit.json
