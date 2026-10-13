@@ -83,3 +83,53 @@ npm run typecheck        # tsc --noEmit, strict
 - `.env` stays uncommitted (gitignored); the webhook URL is never printed.
 - Node < 22.6 cannot run `.ts` directly — use the `npm run` scripts (which use
   `tsx`) or `npx tsx scripts/...`.
+
+# Product Listing
+
+A second headless feature (for testing): a queryable sample product catalog.
+Like the contact feature, it is a plain TypeScript module with **no runtime
+dependencies, no UI, no HTTP server, and no network calls** — the catalog is a
+hardcoded in-source array and everything runs in-memory.
+
+## Product shape (`scripts/products.ts`)
+
+- `interface Product { id; name; description; price; currency; category; imageUrl; inStock }`
+  - `price` is an **integer in minor units** (e.g. `1999` = $19.99), stored
+    alongside a separate `currency` ISO code (sample data is all `"USD"`).
+  - `inStock: boolean`; `imageUrl` is a static placeholder (never fetched).
+
+## API
+
+- `listProducts(options?)` → `Product[]`. Always returns a **copy** of the
+  catalog; it never mutates or exposes the internal array.
+  - No options → full catalog in source order.
+  - `category` → **case-insensitive exact** match; no match returns `[]`.
+  - `sortBy: 'price' | 'name'` with `sortDirection: 'asc' | 'desc'`
+    (default `'asc'`). With no `sortBy`, source order is preserved.
+- `formatPrice(product)` → display string. Converts minor units to major with
+  two decimals: USD renders as `"$19.99"`; other currencies fall back to
+  `"<amount> <currency>"` (e.g. `"19.99 EUR"`).
+- `validateListProductsOptions(options)` — collects issues and throws
+  `ProductQueryValidationError` (carries `issues: string[]`) for a non-string/
+  empty `category`, or an invalid `sortBy` / `sortDirection`. `listProducts`
+  calls this first, so bad options throw before any work is done.
+
+## CLI usage
+
+```bash
+npm run products                                                  # full catalog as JSON
+npm run products -- --category Electronics --sort price --direction desc
+npm run products -- --sort name                                   # name A→Z
+```
+
+Prints the resulting list as pretty JSON to stdout and exits `0`. On invalid
+options it prints the issues to stderr and exits `1`.
+
+## Test
+
+```bash
+npm run test:products    # or: tsx scripts/test-products.ts
+```
+
+Runs offline (no network). Prints per-check `PASS`/`FAIL`, ends with `ALL PASS`,
+and exits `0` on success / `1` on the first failure.
