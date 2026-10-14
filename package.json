@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "contact": "tsx scripts/contact.ts",
+    "contact:demo": "tsx scripts/contact-demo.ts",
     "test:contact": "tsx scripts/test-contact.ts",
     "typecheck": "tsc --noEmit",
     "build": "node scripts/build.mjs"
