@@ -17,6 +17,7 @@ async function run(): Promise<void> {
     email: "test@example.com",
     subject: `Contact Us test — ${new Date().toISOString()}`,
     body: "Live end-to-end test sending a real Slack message via SLACK_URL.",
+    phone: "+14155552671",
   };
   try {
     const { status, body } = await submitContactForm(valid);
@@ -42,6 +43,55 @@ async function run(): Promise<void> {
       console.error(`FAIL (validation): unexpected error ${(err as Error).message}`);
       process.exit(1);
     }
+  }
+
+  // Test 3: validation rejects invalid phone format.
+  try {
+    validateContact({
+      name: "Test User",
+      email: "test@example.com",
+      subject: "Test",
+      body: "Test body",
+      phone: "invalid-phone",
+    });
+    console.error("FAIL (phone validation): expected ContactValidationError, none thrown");
+    process.exit(1);
+  } catch (err) {
+    if (err instanceof ContactValidationError && err.issues.some((i) => i.includes("phone"))) {
+      console.log(`PASS (phone validation): rejected invalid phone`);
+    } else {
+      console.error(`FAIL (phone validation): unexpected error ${(err as Error).message}`);
+      process.exit(1);
+    }
+  }
+
+  // Test 4: validation accepts valid E.164 phone format.
+  try {
+    validateContact({
+      name: "Test User",
+      email: "test@example.com",
+      subject: "Test",
+      body: "Test body",
+      phone: "+14155552671",
+    });
+    console.log("PASS (valid phone): accepted valid E.164 phone");
+  } catch (err) {
+    console.error(`FAIL (valid phone): ${(err as Error).message}`);
+    process.exit(1);
+  }
+
+  // Test 5: validation accepts empty phone (optional).
+  try {
+    validateContact({
+      name: "Test User",
+      email: "test@example.com",
+      subject: "Test",
+      body: "Test body",
+    });
+    console.log("PASS (optional phone): accepted submission without phone");
+  } catch (err) {
+    console.error(`FAIL (optional phone): ${(err as Error).message}`);
+    process.exit(1);
   }
 
   console.log("ALL PASS");
