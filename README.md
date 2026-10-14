@@ -59,6 +59,34 @@ npm run test:contact     # or: tsx scripts/test-contact.ts
 Prints `ALL PASS` and exits `0` only if both pass. If `SLACK_URL` is unset it
 prints `FAIL: SLACK_URL not set — cannot run live test` and exits `1`.
 
+### Contact Us demo — static HTML page + live send
+
+```bash
+npm run contact:demo              # live send + writes contact-demo.html
+npm run contact:demo -- --dry-run # skip the send; just write the page
+npm run contact:demo -- --out=public/demo.html
+```
+
+Generates a **self-contained static HTML page** (default `contact-demo.html`)
+that you open directly in a browser — there is **no HTTP server**. The page
+shows the four-field Contact&nbsp;Us form (Name/Email/Subject/Body) pre-filled
+with a sample submission, mirrors `validateContact`'s rules client-side for UX,
+and previews the Block Kit payload. It makes **no** network request from the
+browser.
+
+By default the command also performs a **real, channel-visible** Slack send of
+the sample submission via `submitContactForm()` and prints
+`Contact submitted to Slack (HTTP 200)`; the authoritative server-side payload
+and send result are embedded in the generated page. Use `--dry-run` (or
+`--no-send`) to skip the live send while iterating on the UI, and `--out=<path>`
+to change the output file.
+
+The browser form only previews the payload — it cannot deliver to Slack (no
+server, and client-side posting would expose the secret). Real delivery is
+server-side only, and the `SLACK_URL` value is **never** printed or embedded in
+the page. If `SLACK_URL` is unset, the page is still written and a secret-free
+"not sent" result is reported (exit `1`; `--dry-run` exits `0`).
+
 ### Type-check
 
 ```bash
