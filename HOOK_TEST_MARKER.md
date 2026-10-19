@@ -1,0 +1,4 @@
+LAUNCH_TIMESTAMP set: false
+HOOK_RAN_IN: unset
+HOOK_SECRET_TEST set: true
+RALPH_CONTAINER_MODE: true
