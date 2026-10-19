@@ -38,3 +38,24 @@ This file persists context across agent sessions. Update it as you work.
 
 ## Next Steps
 - None. Plan is fully implemented and verified.
+
+## Regression Follow-up (2026-10-19)
+- A regression run reported `npm run test:contact` failing with
+  `FAIL: SLACK_URL not set — cannot run live test`.
+- Investigated and determined this is NOT a regression caused by this branch:
+  - `git diff main...hook-fail-test --stat` shows only
+    `.hublaunch/hooks/beforeLaunch.ts`, the two lessons/plan markdown files, and
+    `HOOK_FAIL_TEST_SHOULD_NOT_EXIST.md` changed. `scripts/contact.ts` and
+    `scripts/test-contact.ts` are byte-identical to `main` and were last
+    touched in the unrelated `be432f3` commit, which predates this branch.
+  - `scripts/test-contact.ts` does a *live* Slack send and intentionally
+    `process.exit(1)`s with that exact message whenever the `SLACK_URL`
+    secret isn't present in the environment — this sandbox has no
+    `SLACK_URL` set and no CI/workflow config wires one in, so the test
+    fails the same way on `main` with zero code changes.
+  - This matches the original lessons note above: "Do NOT run
+    `npm run test:contact`... unrelated to this markdown-only fixture."
+- No source change was made in response to this failure — doing so (e.g.
+  faking a `SLACK_URL`, stubbing the live send, or editing `contact.ts`)
+  would mask an unrelated pre-existing environmental limitation rather than
+  fix anything this branch broke. Correct action: document and leave as-is.
