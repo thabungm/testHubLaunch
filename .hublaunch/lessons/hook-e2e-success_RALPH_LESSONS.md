@@ -34,3 +34,24 @@ This file persists context across agent sessions. Update it as you work.
 
 ## Next Steps
 - Done. Marker file is the deliverable.
+
+## Regression Follow-up (2026-10-19)
+- Reported regression failure: `npm run test:contact` → "FAIL: SLACK_URL not set — cannot run live test".
+- **Root cause: missing secret, not a code regression.** Verified:
+  - `git diff be432f3 HEAD -- scripts/contact.ts scripts/test-contact.ts` is empty — this
+    branch's commits (HOOK_TEST_MARKER.md, ralph.md, lessons, plan files, beforeLaunch
+    hook fixture) never touch `scripts/contact.ts` or `scripts/test-contact.ts`.
+  - `SLACK_URL` is unset in this sandbox; no `.env` or `hublaunch.config.js` present
+    anywhere under `/workspace` (both are gitignored and provisioned externally per-session).
+  - This matches the prior `testContactUs_RALPH_LESSONS.md` finding from another sandbox
+    run where SLACK_URL was also absent — vs. `stream-live-llm-verify_RALPH_LESSONS.md`
+    where it *was* present. Availability is non-deterministic across sandbox sessions,
+    controlled by HubLaunch's secret-forwarding, not by repo code.
+  - The hook-e2e-success plan for this branch explicitly scoped out "Any change to
+    `.env`, config files, or launch machinery" — consistent with not touching this.
+- **Did not change `scripts/test-contact.ts` to skip-on-missing-SLACK_URL.** That would
+  convert an intentional live Slack E2E check into a silent no-op, masking the real
+  failure mode the test exists to catch. The hard-fail-with-clear-message behavior is
+  correct and matches the project's documented intent in `ralph.md`.
+- **Conclusion: not a regression introduced by this branch.** No code fix applied.
+  `npm run test:contact` will pass once SLACK_URL is provisioned in the sandbox env.
