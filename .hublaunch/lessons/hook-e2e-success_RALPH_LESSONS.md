@@ -87,3 +87,17 @@ This file persists context across agent sessions. Update it as you work.
     confirmation that the failure is sandbox secret provisioning, not something this
     branch's code can fix. Treating further identical reports as the same known issue
     unless the diff or env state actually changes.
+
+## Regression Follow-up #4 (2026-10-19, re-run yet again)
+- Fourth identical report: `npm run test:contact` → "FAIL: SLACK_URL not set — cannot run
+  live test". Re-verified once more from scratch:
+  - `git diff main --stat` → same 4 non-code files only (lessons, one plan file,
+    `HOOK_TEST_MARKER.md`, `ralph.md`). `scripts/contact.ts` / `scripts/test-contact.ts`
+    still untouched by this branch.
+  - `SLACK_URL` still empty; no `.env` / `hublaunch.config.js` under `/workspace`.
+  - Re-read `scripts/test-contact.ts` in full: it's intentionally a live-Slack-send E2E
+    test that hard-fails via `process.exit(1)` when `SLACK_URL` is absent — by design,
+    not a bug.
+  - No code change applied — same reasoning as #1-#3. This is now four consecutive
+    confirmations across separate regression passes that this is sandbox secret
+    provisioning flakiness, not a regression caused by this branch's changes.
