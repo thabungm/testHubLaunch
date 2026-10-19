@@ -98,3 +98,34 @@ This file persists context across agent sessions. Update it as you work.
     secret each time — the loop will keep flagging this until the harness
     stops invoking `test:contact` without `SLACK_URL` set, or the secret is
     provisioned in the environment that runs the regression suite.
+
+## Regression Follow-up #4 (2026-10-19, re-confirmed a fourth time)
+- Same `test:contact` failure reported yet again via the generic regression-fix
+  prompt. Independently re-verified from scratch (did not just trust this file):
+  - `git status --porcelain`: clean.
+  - `git diff main...hook-fail-test --stat`: still exactly the same 4 paths
+    (`beforeLaunch.ts`, this lessons file, the plan markdown, the marker file).
+  - `git diff main...hook-fail-test -- scripts/contact.ts scripts/test-contact.ts`:
+    empty — byte-identical to `main`.
+  - Re-read `scripts/test-contact.ts` in full and `README.md`'s "Setup —
+    export `SLACK_URL`" / usage sections: confirms `FAIL: SLACK_URL not set —
+    cannot run live test` + exit 1 is the documented, intended contract for a
+    live E2E test when the secret isn't provisioned, not a bug.
+  - `echo "SLACK_URL=[$SLACK_URL]"` → `[]`, still absent.
+  - `npm run typecheck` → zero errors.
+  - Checked for an in-repo regression-runner config that might be mis-invoking
+    `test:contact` (e.g. a "test" aggregate script, CI workflow file) — found
+    none; `package.json` only has standalone `contact`/`test:contact`/
+    `typecheck`/`build` scripts, no `test` script that bundles them. The
+    harness invoking `test:contact` lives outside this repo, so there is no
+    in-repo fix available for "stop calling this without the secret."
+  - Conclusion unchanged across 4 independent checks: this is not caused by
+    any change on this branch. No source/config edit was made this round
+    either, for the same reason as before — every candidate "fix" available
+    inside this repo would either fake the secret (masks the live-send
+    contract test:contact exists to enforce) or edit untouched, unrelated
+    files. If this resurfaces again, stop re-verifying the same facts and
+    instead escalate to a human: the fix has to happen in the regression
+    harness (skip/allow test:contact when SLACK_URL is unset) or by
+    provisioning SLACK_URL as a secret for whatever environment runs these
+    regression checks.
