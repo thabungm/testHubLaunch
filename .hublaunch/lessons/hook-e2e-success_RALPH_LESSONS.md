@@ -55,3 +55,22 @@ This file persists context across agent sessions. Update it as you work.
   correct and matches the project's documented intent in `ralph.md`.
 - **Conclusion: not a regression introduced by this branch.** No code fix applied.
   `npm run test:contact` will pass once SLACK_URL is provisioned in the sandbox env.
+
+## Regression Follow-up #2 (2026-10-19, re-run)
+- Same failure reported again on a fresh regression pass: `npm run test:contact` →
+  "FAIL: SLACK_URL not set — cannot run live test". Re-verified from scratch, same result:
+  - `git diff main --stat` on this branch shows only 4 files changed: this lessons file,
+    one plan file under `plans/`, `HOOK_TEST_MARKER.md`, and `ralph.md`. No script files
+    touched at all — confirmed again `scripts/contact.ts` / `scripts/test-contact.ts` are
+    untouched by this branch.
+  - `SLACK_URL` is still empty in this sandbox session; no `.env` / `hublaunch.config.js`
+    exist under `/workspace`.
+  - No code change made (again) — doing so would require either hardcoding a secret
+    (unsafe) or weakening `test-contact.ts` to skip when the secret is absent, which
+    would mask the live-Slack-send failure mode it exists to catch.
+- **This is environment flakiness in the regression harness, not a bug to fix in code.**
+  If this keeps recurring across sessions, the actionable fix is upstream: either (a) the
+  regression runner should provision `SLACK_URL` before invoking `test:contact`, or (b)
+  `test:contact` should be excluded from automated regression runs and reserved for manual
+  live-Slack verification. Flagging this for a human/upstream decision rather than
+  silently patching the test.
