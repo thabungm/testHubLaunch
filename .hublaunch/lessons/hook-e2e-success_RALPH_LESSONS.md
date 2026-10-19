@@ -74,3 +74,16 @@ This file persists context across agent sessions. Update it as you work.
   `test:contact` should be excluded from automated regression runs and reserved for manual
   live-Slack verification. Flagging this for a human/upstream decision rather than
   silently patching the test.
+
+## Regression Follow-up #3 (2026-10-19, re-run again)
+- Third identical report: `npm run test:contact` → "FAIL: SLACK_URL not set — cannot run
+  live test". Re-verified once more, same findings as #1 and #2:
+  - `git diff main --stat` still shows only the same 4 non-code files on this branch
+    (lessons, one plan file, `HOOK_TEST_MARKER.md`, `ralph.md`). `scripts/contact.ts` and
+    `scripts/test-contact.ts` remain untouched.
+  - `SLACK_URL` is still empty (`echo "SLACK_URL=[$SLACK_URL]"` → `SLACK_URL=[]`); no
+    `.env`/`hublaunch.config.js` present under `/workspace`.
+  - No code change applied, for the same reasons as #1/#2. This is the third consecutive
+    confirmation that the failure is sandbox secret provisioning, not something this
+    branch's code can fix. Treating further identical reports as the same known issue
+    unless the diff or env state actually changes.
