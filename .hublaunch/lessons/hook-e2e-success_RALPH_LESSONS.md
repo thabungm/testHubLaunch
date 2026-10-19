@@ -101,3 +101,17 @@ This file persists context across agent sessions. Update it as you work.
   - No code change applied — same reasoning as #1-#3. This is now four consecutive
     confirmations across separate regression passes that this is sandbox secret
     provisioning flakiness, not a regression caused by this branch's changes.
+
+## Regression Follow-up #5 (2026-10-19, re-run yet again)
+- Fifth identical report: `npm run test:contact` → "FAIL: SLACK_URL not set — cannot run
+  live test". Re-verified once more from scratch, identical findings to #1-#4:
+  - `git diff main --stat` → still only the same 4 non-code files (lessons, one plan
+    file, `HOOK_TEST_MARKER.md`, `ralph.md`). `scripts/contact.ts` /
+    `scripts/test-contact.ts` untouched.
+  - `SLACK_URL` still empty (`SLACK_URL=[]`); no `.env` / `hublaunch.config.js` under
+    `/workspace`.
+  - No code change applied. Five consecutive identical confirmations now — this is
+    stable sandbox secret-provisioning flakiness external to this branch, not something
+    fixable from the repo. Not changing approach without new information (e.g. a diff
+    that actually touches contact code, or SLACK_URL becoming available and still
+    failing).
