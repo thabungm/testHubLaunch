@@ -82,3 +82,19 @@ This file persists context across agent sessions. Update it as you work.
   documented, intentional contract. If this keeps resurfacing, the real fix
   belongs in the regression harness itself (skip/allow `test:contact` when
   `SLACK_URL` is absent, or inject the secret for CI) — not in this branch.
+
+## Regression Follow-up #3 (2026-10-19, re-confirmed a third time)
+- Same `test:contact` failure reported again. Re-verified from scratch once more:
+  - `git diff main...hook-fail-test -- scripts/contact.ts scripts/test-contact.ts`
+    is empty (byte-identical on both scripts).
+  - `git diff main...hook-fail-test --stat` shows only 4 paths changed:
+    `.hublaunch/hooks/beforeLaunch.ts`, this lessons file, the plan markdown,
+    and `HOOK_FAIL_TEST_SHOULD_NOT_EXIST.md`. None relate to contact/Slack.
+  - `echo "SLACK_URL=$SLACK_URL"` prints empty — the secret is genuinely
+    absent from this sandbox's environment, same as every prior check.
+  - No source or config change made. Repeating the same fix attempt
+    (editing contact.ts/test-contact.ts or injecting a fake SLACK_URL) would
+    not change the outcome because the harness itself re-runs without the
+    secret each time — the loop will keep flagging this until the harness
+    stops invoking `test:contact` without `SLACK_URL` set, or the secret is
+    provisioned in the environment that runs the regression suite.
