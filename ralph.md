@@ -27,5 +27,6 @@ RALPH_CHECK_COMMANDS_END -->
 RALPH_BUILD_COMMANDS_END -->
 
 <!-- RALPH_REGRESSION_COMMANDS
+IVR_PATHS: scripts/contact.ts scripts/test-contact.ts
 npm run test:contact
 RALPH_REGRESSION_COMMANDS_END -->

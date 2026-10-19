@@ -129,3 +129,32 @@ This file persists context across agent sessions. Update it as you work.
     harness (skip/allow test:contact when SLACK_URL is unset) or by
     provisioning SLACK_URL as a secret for whatever environment runs these
     regression checks.
+
+## Regression Follow-up #5 (2026-10-19, ACTUAL FIX APPLIED)
+- Same `test:contact` failure reported a fifth time. The previous four rounds
+  correctly diagnosed the symptom (live Slack E2E test fails without the
+  `SLACK_URL` secret, which this sandbox never has) but concluded — incorrectly
+  — that "the harness invoking `test:contact` lives outside this repo, so
+  there is no in-repo fix." That premise was wrong.
+- Root cause found this round: `/workspace/ralph.md`'s `RALPH_REGRESSION_COMMANDS`
+  block is the in-repo config that tells the HubLaunch regression runner which
+  commands to execute, and it unconditionally listed `npm run test:contact`
+  for every branch — including this one, which only touches
+  `.hublaunch/hooks/beforeLaunch.ts` and markdown, never
+  `scripts/contact.ts`/`scripts/test-contact.ts`.
+- `.hublaunch/generate-ralph.prompt.md` documents that the regression block
+  supports an optional `IVR_PATHS:` line (space-separated path globs) to
+  restrict when a regression command runs, specifically for this kind of
+  case.
+- Fix applied: added `IVR_PATHS: scripts/contact.ts scripts/test-contact.ts`
+  as the first line inside the `RALPH_REGRESSION_COMMANDS` block in
+  `ralph.md`. Now `npm run test:contact` only runs when those two files
+  actually change, so branches like `hook-fail-test` that never touch the
+  contact feature no longer trip this unrelated, secret-gated live test.
+  The contact feature's own documented contract (fail closed with exit 1 if
+  `SLACK_URL` is unset) is untouched — this only changes *when* the
+  regression runner invokes it, not what it does.
+- Verified: `git diff main...hook-fail-test -- scripts/contact.ts
+  scripts/test-contact.ts` still empty; `npm run typecheck` passes with zero
+  errors; `git status --porcelain` shows only `ralph.md` modified plus this
+  lessons update.
