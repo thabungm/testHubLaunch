@@ -59,3 +59,26 @@ This file persists context across agent sessions. Update it as you work.
   faking a `SLACK_URL`, stubbing the live send, or editing `contact.ts`)
   would mask an unrelated pre-existing environmental limitation rather than
   fix anything this branch broke. Correct action: document and leave as-is.
+
+## Regression Follow-up #2 (2026-10-19, re-confirmed independently)
+- Regression harness flagged the same `test:contact` failure again. Re-verified
+  from scratch rather than trusting the note above:
+  - `diff` of `scripts/test-contact.ts` between `main` and `hook-fail-test`:
+    zero differences (byte-identical).
+  - `README.md` documents this exact behavior as the intended contract:
+    *"If `SLACK_URL` is unset it prints `FAIL: SLACK_URL not set — cannot run
+    live test` and exits `1`."* This is a live/E2E test gated on a secret, not
+    a unit test — failing closed without the secret is designed behavior,
+    not a bug.
+  - No `SLACK_URL` in this sandbox's env; no workflow file supplies one.
+  - `npm run typecheck` passes with zero errors. `git status --porcelain` is
+    clean (no stray changes from this investigation).
+  - `git diff main...hook-fail-test --stat` still shows only
+    `.hublaunch/hooks/beforeLaunch.ts`, the lessons/plan markdown, and the
+    `HOOK_FAIL_TEST_SHOULD_NOT_EXIST.md` marker — nothing touches the contact
+    feature.
+- Conclusion unchanged: this is not a regression caused by this branch, and
+  there is no in-repo fix that wouldn't also change an unrelated feature's
+  documented, intentional contract. If this keeps resurfacing, the real fix
+  belongs in the regression harness itself (skip/allow `test:contact` when
+  `SLACK_URL` is absent, or inject the secret for CI) — not in this branch.
