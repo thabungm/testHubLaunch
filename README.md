@@ -56,11 +56,8 @@ npm run test:contact     # or: tsx scripts/test-contact.ts
   `ContactValidationError` and **no** Slack message is sent:
   `PASS (validation): rejected 4 invalid fields`.
 
-Prints `ALL PASS` and exits `0` if validation passes and (when `SLACK_URL` is
-set) the live send succeeds. If `SLACK_URL` is unset, Test 1 is skipped
-(`SKIP (live send): SLACK_URL not set — skipping live Slack send`) rather than
-failing the run, Test 2 still runs, and it prints
-`ALL PASS (live send skipped)` and exits `0`.
+Prints `ALL PASS` and exits `0` only if both pass. If `SLACK_URL` is unset it
+prints `FAIL: SLACK_URL not set — cannot run live test` and exits `1`.
 
 ### Type-check
 
