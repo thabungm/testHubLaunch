@@ -1,11 +1,3 @@
-/**
- * Live end-to-end test for the Contact Us feature.
- *
- *   Test 1 — happy path: performs a REAL Slack send via SLACK_URL, asserts HTTP 200.
- *   Test 2 — validation: rejects all-blank/invalid input WITHOUT any network call.
- *
- * Requires SLACK_URL to be set for Test 1. Run with:  tsx scripts/test-contact.ts
- */
 import {
   submitContactForm,
   validateContact,
@@ -19,8 +11,7 @@ async function run(): Promise<void> {
     process.exit(1);
   }
 
-  // Test 1: live happy path — actually sends a message to Slack. The ISO
-  // timestamp in the subject makes the message identifiable in the channel.
+  // Test 1: live happy path — actually sends a message to Slack.
   const valid: ContactInput = {
     name: "Test User",
     email: "test@example.com",

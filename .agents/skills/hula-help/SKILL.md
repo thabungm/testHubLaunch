@@ -35,7 +35,7 @@ hula --version 2>/dev/null
 ```
 
 If initialized, `Read .hublaunch/hublaunch.config.js` and note (never print the values themselves, only presence/absence):
-- Is `hulaApiKey` (or `anthropicApiKey`) present with a non-empty value? → user has likely completed `hula login`.
+- Is `hulaApiKey` (or `provider.apiKey`) present with a non-empty value? → user has likely completed `hula login`.
 - If `.hublaunch/trackedPlans.json` exists, `Read` it — does it have any entries? → user has launched at least one plan before.
 
 If any check fails (not a git repo, config unreadable), treat that signal as unknown and continue — don't block on it.
