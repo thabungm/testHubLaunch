@@ -1,5 +1,5 @@
 /**
- * Contact Us feature — validate a submission and post it to Slack via SLACK_URL.
+ * Contact Us feature (E2E conflict probe e2e-7104bba-2048) — validate and post to Slack.
  *
  * Exposes a headless, reusable API (no web UI / HTTP server):
  *   - validateContact()   — synchronous, throws ContactValidationError on bad input
