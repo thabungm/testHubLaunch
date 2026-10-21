@@ -1,8 +1,11 @@
+export type ContactPriority = "low" | "normal" | "high";
+
 export interface ContactInput {
   name: string;
   email: string;
   subject: string;
   body: string;
+  priority?: ContactPriority;
 }
 
 export class ContactValidationError extends Error {
@@ -16,6 +19,13 @@ export class ContactValidationError extends Error {
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
+const PRIORITIES: readonly ContactPriority[] = ["low", "normal", "high"];
+const PRIORITY_DISPLAY: Record<ContactPriority, string> = {
+  high: "🔴 High",
+  normal: "🟡 Normal",
+  low: "🟢 Low",
+};
+
 export function validateContact(input: ContactInput): void {
   const issues: string[] = [];
   const name = input.name?.trim() ?? "";
@@ -28,6 +38,10 @@ export function validateContact(input: ContactInput): void {
   else if (!EMAIL_RE.test(email)) issues.push("email is invalid");
   if (!subject) issues.push("subject is required");
   if (!body) issues.push("body is required");
+
+  if (input.priority !== undefined && !PRIORITIES.includes(input.priority)) {
+    issues.push("priority is invalid");
+  }
 
   if (issues.length) throw new ContactValidationError(issues);
 }
@@ -46,16 +60,21 @@ export function buildSlackPayload(input: ContactInput): object {
   const header = `📬 New Contact: ${subject}`.slice(0, 150);
   const message = body.slice(0, 2900);
 
+  const fields = [
+    { type: "mrkdwn", text: `*Name:*\n${name}` },
+    { type: "mrkdwn", text: `*Email:*\n${email}` },
+  ];
+  if (input.priority !== undefined && input.priority in PRIORITY_DISPLAY) {
+    fields.push({ type: "mrkdwn", text: `*Priority:*\n${PRIORITY_DISPLAY[input.priority]}` });
+  }
+
   return {
     text: `New contact from ${name} (${email}): ${subject}`,
     blocks: [
       { type: "header", text: { type: "plain_text", text: header } },
       {
         type: "section",
-        fields: [
-          { type: "mrkdwn", text: `*Name:*\n${name}` },
-          { type: "mrkdwn", text: `*Email:*\n${email}` },
-        ],
+        fields,
       },
       { type: "section", text: { type: "mrkdwn", text: `*Message:*\n${message}` } },
     ],
@@ -92,6 +111,7 @@ async function main(): Promise<void> {
     email: "test@example.com",
     subject: "Contact form smoke test",
     body: "This is a manual smoke test from scripts/contact.ts.",
+    priority: "high",
   };
   try {
     const { status, body } = await submitContactForm(sample);

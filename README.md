@@ -67,14 +67,19 @@ npm run typecheck        # tsc --noEmit, strict
 
 ## API (`scripts/contact.ts`)
 
-- `interface ContactInput { name; email; subject; body }`
+- `interface ContactInput { name; email; subject; body; priority? }` — `priority`
+  is optional and, when present, must be `"low" | "normal" | "high"`.
 - `class ContactValidationError extends Error` — carries `issues: string[]`.
 - `validateContact(input)` — trims all fields; requires non-empty `name`,
   `subject`, `body`; requires `email` to match `/^[^@\s]+@[^@\s]+\.[^@\s]+$/`.
-  Collects **all** issues and throws before any network call.
+  A supplied `priority` must be one of `"low" | "normal" | "high"` or it is
+  rejected as an issue (omitting it is fine). Collects **all** issues and throws
+  before any network call.
 - `buildSlackPayload(input)` — builds the Block Kit message (header + Name/Email
   fields + Message section) with a `text` fallback; escapes `&`, `<`, `>` in user
-  input and truncates to Slack's limits.
+  input and truncates to Slack's limits. A supplied `priority` renders as an extra
+  `*Priority:*` field with a colored emoji (🔴 High / 🟡 Normal / 🟢 Low);
+  omitting it leaves the message unchanged.
 - `submitContactForm(input)` — validates, then POSTs to `SLACK_URL`; resolves with
   `{ status, body }` (Slack returns `200` + `ok` on success).
 

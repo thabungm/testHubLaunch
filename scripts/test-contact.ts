@@ -1,8 +1,10 @@
 import {
   submitContactForm,
   validateContact,
+  buildSlackPayload,
   ContactValidationError,
   type ContactInput,
+  type ContactPriority,
 } from "./contact.ts";
 
 async function run(): Promise<void> {
@@ -40,6 +42,45 @@ async function run(): Promise<void> {
       console.log(`PASS (validation): rejected ${err.issues.length} invalid fields`);
     } else {
       console.error(`FAIL (validation): unexpected error ${(err as Error).message}`);
+      process.exit(1);
+    }
+  }
+
+  // Test 3: validation rejects an invalid priority WITHOUT sending to Slack.
+  try {
+    validateContact({
+      name: "Test User",
+      email: "test@example.com",
+      subject: "Subject",
+      body: "Body",
+      priority: "urgent" as unknown as ContactPriority,
+    });
+    console.error("FAIL (priority validation): expected ContactValidationError, none thrown");
+    process.exit(1);
+  } catch (err) {
+    if (err instanceof ContactValidationError && err.issues.includes("priority is invalid")) {
+      console.log("PASS (priority validation): rejected invalid priority");
+    } else {
+      console.error(`FAIL (priority validation): unexpected error ${(err as Error).message}`);
+      process.exit(1);
+    }
+  }
+
+  // Test 4: buildSlackPayload renders a *Priority:* field when priority is supplied (no network).
+  {
+    const payload = buildSlackPayload({
+      name: "Test User",
+      email: "test@example.com",
+      subject: "Subject",
+      body: "Body",
+      priority: "high",
+    }) as { blocks: Array<{ type: string; fields?: Array<{ type: string; text: string }> }> };
+    const section = payload.blocks.find((b) => b.type === "section" && Array.isArray(b.fields));
+    const priorityField = section?.fields?.find((f) => f.text.startsWith("*Priority:*"));
+    if (priorityField && priorityField.text.includes("🔴 High")) {
+      console.log("PASS (priority payload): *Priority:* field present with high emoji/label");
+    } else {
+      console.error("FAIL (priority payload): expected a *Priority:* field with the high emoji/label");
       process.exit(1);
     }
   }
