@@ -1,7 +1,7 @@
 # Contact Us → Slack
 
-A headless "Contact Us" feature (for testing). Given a submission with four
-fields — **Name**, **Email**, **Subject**, **Body** — it validates the input and,
+A headless "Contact Us" feature (for testing). Given a submission with the
+fields — **Name**, **Email**, optional **Phone**, **Subject**, **Body** — it validates the input and,
 on submit, posts a formatted [Slack Block Kit](https://api.slack.com/block-kit)
 message to a Slack **Incoming Webhook** URL stored in the `SLACK_URL` environment
 variable. There is no web UI or HTTP server — "submit" means calling the exported
@@ -67,14 +67,17 @@ npm run typecheck        # tsc --noEmit, strict
 
 ## API (`scripts/contact.ts`)
 
-- `interface ContactInput { name; email; subject; body }`
+- `interface ContactInput { name; email; phone?; subject; body }`
 - `class ContactValidationError extends Error` — carries `issues: string[]`.
 - `validateContact(input)` — trims all fields; requires non-empty `name`,
   `subject`, `body`; requires `email` to match `/^[^@\s]+@[^@\s]+\.[^@\s]+$/`.
-  Collects **all** issues and throws before any network call.
+  `phone` is **optional**: when present (non-empty after trim) it must match
+  `/^\+\d{8,15}$/` (E.164: a literal `+` then 8–15 digits), otherwise it is
+  skipped. Collects **all** issues and throws before any network call.
 - `buildSlackPayload(input)` — builds the Block Kit message (header + Name/Email
-  fields + Message section) with a `text` fallback; escapes `&`, `<`, `>` in user
-  input and truncates to Slack's limits.
+  fields + Message section) with a `text` fallback; renders an optional "Phone"
+  field immediately after Email when a valid `phone` is present; escapes `&`,
+  `<`, `>` in user input and truncates to Slack's limits.
 - `submitContactForm(input)` — validates, then POSTs to `SLACK_URL`; resolves with
   `{ status, body }` (Slack returns `200` + `ok` on success).
 
