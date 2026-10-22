@@ -78,6 +78,11 @@ npm run typecheck        # tsc --noEmit, strict
 - `submitContactForm(input)` — validates, then POSTs to `SLACK_URL`; resolves with
   `{ status, body }` (Slack returns `200` + `ok` on success).
 
+## Running Tests Locally
+
+- `npm run typecheck` — runs `tsc --noEmit`.
+- `npm run test:contact` — runs the input-validation check and a live Slack send (requires `SLACK_URL` in `.env`).
+
 ## Notes
 
 - `.env` stays uncommitted (gitignored); the webhook URL is never printed.
