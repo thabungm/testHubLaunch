@@ -3,6 +3,7 @@ export interface ContactInput {
   email: string;
   subject: string;
   body: string;
+  phone?: string;
 }
 
 export class ContactValidationError extends Error {
@@ -15,6 +16,8 @@ export class ContactValidationError extends Error {
 }
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+// E.164: a leading "+" followed by 8–15 digits.
+const PHONE_RE = /^\+\d{8,15}$/;
 
 export function validateContact(input: ContactInput): void {
   const issues: string[] = [];
@@ -22,12 +25,14 @@ export function validateContact(input: ContactInput): void {
   const email = input.email?.trim() ?? "";
   const subject = input.subject?.trim() ?? "";
   const body = input.body?.trim() ?? "";
+  const phone = input.phone?.trim() ?? "";
 
   if (!name) issues.push("name is required");
   if (!email) issues.push("email is required");
   else if (!EMAIL_RE.test(email)) issues.push("email is invalid");
   if (!subject) issues.push("subject is required");
   if (!body) issues.push("body is required");
+  if (phone && !PHONE_RE.test(phone)) issues.push("phone is invalid");
 
   if (issues.length) throw new ContactValidationError(issues);
 }
@@ -42,21 +47,22 @@ export function buildSlackPayload(input: ContactInput): object {
   const email = esc(input.email.trim());
   const subject = esc(input.subject.trim());
   const body = esc(input.body.trim());
+  const phone = input.phone?.trim() ? esc(input.phone.trim()) : "";
 
   const header = `📬 New Contact: ${subject}`.slice(0, 150);
   const message = body.slice(0, 2900);
+
+  const fields: { type: "mrkdwn"; text: string }[] = [
+    { type: "mrkdwn", text: `*Name:*\n${name}` },
+    { type: "mrkdwn", text: `*Email:*\n${email}` },
+  ];
+  if (phone) fields.push({ type: "mrkdwn", text: `*Phone:*\n${phone}` });
 
   return {
     text: `New contact from ${name} (${email}): ${subject}`,
     blocks: [
       { type: "header", text: { type: "plain_text", text: header } },
-      {
-        type: "section",
-        fields: [
-          { type: "mrkdwn", text: `*Name:*\n${name}` },
-          { type: "mrkdwn", text: `*Email:*\n${email}` },
-        ],
-      },
+      { type: "section", fields },
       { type: "section", text: { type: "mrkdwn", text: `*Message:*\n${message}` } },
     ],
   };
@@ -92,6 +98,7 @@ async function main(): Promise<void> {
     email: "test@example.com",
     subject: "Contact form smoke test",
     body: "This is a manual smoke test from scripts/contact.ts.",
+    phone: "+14155550100",
   };
   try {
     const { status, body } = await submitContactForm(sample);

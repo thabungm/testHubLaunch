@@ -1,6 +1,7 @@
 import {
   submitContactForm,
   validateContact,
+  buildSlackPayload,
   ContactValidationError,
   type ContactInput,
 } from "./contact.ts";
@@ -40,6 +41,68 @@ async function run(): Promise<void> {
       console.log(`PASS (validation): rejected ${err.issues.length} invalid fields`);
     } else {
       console.error(`FAIL (validation): unexpected error ${(err as Error).message}`);
+      process.exit(1);
+    }
+  }
+
+  // Test 3: valid E.164 phone passes validation (no throw).
+  try {
+    validateContact({ name: "A", email: "a@b.co", subject: "s", body: "b", phone: "+14155550100" });
+    console.log("PASS (valid phone): accepted E.164 phone");
+  } catch (err) {
+    console.error(`FAIL (valid phone): unexpected error ${(err as Error).message}`);
+    process.exit(1);
+  }
+
+  // Test 4: invalid phone is rejected with a "phone is invalid" issue.
+  try {
+    validateContact({ name: "A", email: "a@b.co", subject: "s", body: "b", phone: "12345" });
+    console.error("FAIL (invalid phone): expected ContactValidationError, none thrown");
+    process.exit(1);
+  } catch (err) {
+    if (err instanceof ContactValidationError && err.issues.includes("phone is invalid")) {
+      console.log("PASS (invalid phone): rejected with 'phone is invalid'");
+    } else {
+      console.error(`FAIL (invalid phone): unexpected error ${(err as Error).message}`);
+      process.exit(1);
+    }
+  }
+
+  // Test 5: payload includes a Phone field after Email when phone is present.
+  {
+    const payload = buildSlackPayload({
+      name: "A",
+      email: "a@b.co",
+      subject: "s",
+      body: "b",
+      phone: "+14155550100",
+    }) as { blocks: { fields?: { text: string }[] }[] };
+    const fields = payload.blocks[1]?.fields ?? [];
+    const emailIdx = fields.findIndex((f) => f.text.startsWith("*Email:*"));
+    const phoneIdx = fields.findIndex((f) => f.text.startsWith("*Phone:*"));
+    if (phoneIdx !== -1 && emailIdx !== -1 && phoneIdx > emailIdx) {
+      console.log("PASS (payload phone present): Phone field rendered after Email");
+    } else {
+      console.error(
+        `FAIL (payload phone present): emailIdx=${emailIdx}, phoneIdx=${phoneIdx}`,
+      );
+      process.exit(1);
+    }
+  }
+
+  // Test 6: payload omits the Phone field when phone is absent.
+  {
+    const payload = buildSlackPayload({
+      name: "A",
+      email: "a@b.co",
+      subject: "s",
+      body: "b",
+    }) as { blocks: { fields?: { text: string }[] }[] };
+    const fields = payload.blocks[1]?.fields ?? [];
+    if (!fields.some((f) => f.text.startsWith("*Phone:*"))) {
+      console.log("PASS (payload phone absent): no Phone field rendered");
+    } else {
+      console.error("FAIL (payload phone absent): unexpected Phone field");
       process.exit(1);
     }
   }
