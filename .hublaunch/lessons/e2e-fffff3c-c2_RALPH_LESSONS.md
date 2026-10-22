@@ -44,3 +44,22 @@ This file persists context across agent sessions. Update it as you work.
   live Slack test just to force a pass — that would defeat its purpose as a live
   integration check. If this needs to go green in CI, the fix is to provision
   `SLACK_URL` in the environment, not to change the code.
+
+## Regression Check — re-verified (2026-10-22, attempt 2)
+- Same failure reported again by the automated regression runner. Re-confirmed from
+  scratch (fresh `npm install`, `npm run typecheck`, `npm run test:greeting`,
+  `npm run test:contact`):
+  - `typecheck` → clean, no errors.
+  - `test:greeting` → `ALL PASS` (5/5 assertions).
+  - `test:contact` → still `FAIL: SLACK_URL not set — cannot run live test`
+    (exit 1), exactly as documented in README.md ("If `SLACK_URL` is unset it
+    prints ... and exits 1"). No `.env` file present, no `SLACK_URL` in `process.env`.
+  - `git diff 02961a6 8483a77 --stat` shows our commit only touches
+    `package.json`, `tsconfig.json`, `src/greeting.ts`, `src/greeting.test.ts` —
+    still zero overlap with `scripts/contact.ts` / `scripts/test-contact.ts`.
+- Conclusion unchanged: this is NOT a regression caused by the greeting feature.
+  It is a live integration test that requires a secret this sandbox doesn't have.
+  No code change made. If the regression runner must see this green without the
+  secret, that's a test-harness/CI provisioning decision (inject `SLACK_URL`, or
+  have the harness treat "no SLACK_URL" as a skip rather than a hard failure) —
+  not something to paper over inside the application code.
