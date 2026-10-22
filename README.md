@@ -59,6 +59,12 @@ npm run test:contact     # or: tsx scripts/test-contact.ts
 Prints `ALL PASS` and exits `0` only if both pass. If `SLACK_URL` is unset it
 prints `FAIL: SLACK_URL not set — cannot run live test` and exits `1`.
 
+### Version and commit info
+
+```bash
+npm run version-check    # prints package version and current git commit SHA
+```
+
 ### Type-check
 
 ```bash
