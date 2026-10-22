@@ -62,9 +62,19 @@ export function buildSlackPayload(input: ContactInput): object {
   };
 }
 
-export async function submitContactForm(
-  input: ContactInput,
-): Promise<{ status: number; body: string }> {
+// Slack Incoming Webhooks always live on this host. Restricting the destination
+// to it prevents a misconfigured or injected SLACK_URL from turning this into an
+// SSRF sink or exfiltrating the submitter's PII (name/email/message) to an
+// arbitrary endpoint. See README: SLACK_URL must be a Slack webhook URL.
+const SLACK_WEBHOOK_HOST = "hooks.slack.com";
+
+/**
+ * Read SLACK_URL from the environment and validate it is a well-formed HTTPS
+ * Slack webhook URL. Throws a generic Error on any problem — deliberately
+ * WITHOUT echoing the URL value, so the secret webhook is never leaked into
+ * logs or error output.
+ */
+export function resolveSlackUrl(): string {
   let url = process.env.SLACK_URL?.trim() ?? "";
   // Remove trailing comma first (may come before or after quotes)
   if (url.endsWith(",")) {
@@ -76,12 +86,37 @@ export async function submitContactForm(
   }
   if (!url) throw new Error("SLACK_URL environment variable is not set");
 
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error("SLACK_URL is not a valid URL");
+  }
+  if (parsed.protocol !== "https:") {
+    throw new Error("SLACK_URL must use https");
+  }
+  if (parsed.hostname !== SLACK_WEBHOOK_HOST) {
+    throw new Error(`SLACK_URL must be a ${SLACK_WEBHOOK_HOST} webhook URL`);
+  }
+  return parsed.toString();
+}
+
+// Abort the Slack request if it hangs, so a stuck endpoint cannot block the
+// process indefinitely.
+const SLACK_TIMEOUT_MS = 10_000;
+
+export async function submitContactForm(
+  input: ContactInput,
+): Promise<{ status: number; body: string }> {
+  const url = resolveSlackUrl();
+
   validateContact(input); // throws ContactValidationError; no send on failure
 
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(buildSlackPayload(input)),
+    signal: AbortSignal.timeout(SLACK_TIMEOUT_MS),
   });
   return { status: res.status, body: await res.text() };
 }
