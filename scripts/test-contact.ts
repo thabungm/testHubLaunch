@@ -44,6 +44,40 @@ async function run(): Promise<void> {
     }
   }
 
+  // Test 3: retry — fails twice with a retryable error, succeeds on the 3rd attempt.
+  {
+    const realFetch = globalThis.fetch;
+    let callCount = 0;
+    globalThis.fetch = (async (..._args: Parameters<typeof fetch>) => {
+      callCount++;
+      if (callCount < 3) {
+        return new Response("service unavailable", { status: 503 });
+      }
+      return new Response("ok", { status: 200 });
+    }) as typeof fetch;
+    process.env.CONTACT_RETRY_BASE_DELAY_MS = "10"; // fast retry for the test
+    try {
+      const { status, body } = await submitContactForm({
+        name: "Retry Test",
+        email: "retry@example.com",
+        subject: "Retry behavior test",
+        body: "Exercises the retry loop with a stubbed fetch.",
+      });
+      if (status === 200 && body === "ok" && callCount === 3) {
+        console.log(`PASS (retry): succeeded on attempt ${callCount} after 2 retryable failures`);
+      } else {
+        console.error(`FAIL (retry): status=${status} body=${body} callCount=${callCount}`);
+        process.exit(1);
+      }
+    } catch (err) {
+      console.error(`FAIL (retry): unexpected throw: ${(err as Error).message}`);
+      process.exit(1);
+    } finally {
+      globalThis.fetch = realFetch;
+      delete process.env.CONTACT_RETRY_BASE_DELAY_MS;
+    }
+  }
+
   console.log("ALL PASS");
   process.exit(0);
 }
