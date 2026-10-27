@@ -27,3 +27,8 @@ This file persists context across agent sessions. Update it as you work.
 
 ## Next Steps
 - Operator/pipeline closes the resulting PR unmerged (not an implementation action).
+
+## Follow-up: typecheck "tsc: not found"
+- Cause: `node_modules/` was never installed in this sandbox (fresh checkout), not a code/type error. `npm run typecheck` just shells out to `tsc`, which doesn't exist until deps are installed.
+- Fix: run `npm install` (installs typescript/tsx/@types/node from package.json), then `npm run typecheck` passes with zero errors/warnings.
+- No source files needed changes. `node_modules/` is already gitignored, so nothing to stage/commit from the install.
