@@ -44,3 +44,16 @@ This file persists context across agent sessions. Update it as you work.
   cannot pass without a live `SLACK_URL` secret injected by the pipeline. Not
   fixable from within the sandbox. `npm run typecheck` still passes (0 errors),
   confirming no code-level breakage.
+
+## Regression Re-check (2026-10-27, second pass)
+- Same failure reported again (`npm run test:contact` → SLACK_URL not set).
+  Re-verified from scratch: `git diff d3608fd..HEAD --stat` still shows only
+  README.md / ralph.md / lesson+plan notes changed — zero files under
+  `scripts/` touched. `scripts/test-contact.ts` itself unconditionally calls
+  `process.exit(1)` when `SLACK_URL` is unset/empty, before any of this
+  branch's changes could possibly matter.
+- Ran `npm install && npm run typecheck` again: EXIT 0, zero errors.
+- Conclusion unchanged: not a regression, not fixable from this sandbox
+  (requires a secret only the real pipeline environment has). No code edits
+  made this pass either — any such edit would be unrelated scope creep on a
+  disposable, README-only branch.
