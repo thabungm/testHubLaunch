@@ -28,3 +28,19 @@ This file persists context across agent sessions. Update it as you work.
 
 ## Next Steps
 - Done. Branch/PR is disposable and will be closed unmerged by the pipeline.
+
+## Regression Check (2026-10-27)
+- Reported failure: `npm run test:contact` → "FAIL: SLACK_URL not set — cannot run
+  live test".
+- Root cause: NOT a regression from this branch. `scripts/test-contact.ts` has
+  always hard-required a real `SLACK_URL` secret to perform a live Slack webhook
+  send (see its own exit-1 check), and this sandbox has no `SLACK_URL` set. This
+  exact blocker was already documented in `testContactUs_RALPH_LESSONS.md` from
+  the PR that introduced the contact feature, before this branch existed.
+- Verified this branch's diff vs its parent touches only README.md (+1 marker
+  line), this lessons file, and ralph.md/plan notes — `scripts/contact.ts` and
+  `scripts/test-contact.ts` are untouched (`git diff d3608fd..HEAD --stat`).
+- Fix: none applicable/needed — there is no code change to revert, and the test
+  cannot pass without a live `SLACK_URL` secret injected by the pipeline. Not
+  fixable from within the sandbox. `npm run typecheck` still passes (0 errors),
+  confirming no code-level breakage.
