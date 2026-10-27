@@ -38,3 +38,10 @@ This file persists context across agent sessions. Update it as you work.
 ## Next Steps
 - Done. Plan is 100% complete. PR to be closed unmerged per plan.
 - If `test:contact` keeps getting flagged as a "regression" in automated runs, the real fix belongs to the regression harness config (exclude `test:contact` when `SLACK_URL` isn't provisioned), not to this feature's code.
+
+## Re-verification (2026-10-27, second regression-fix pass)
+- Same failure reported again: `npm run test:contact` → `FAIL: SLACK_URL not set — cannot run live test`.
+- Re-checked from scratch: `git status` clean, `git diff main...HEAD --stat` shows only `README.md`, `ralph.md`, the plan doc, and this lessons file — still zero touches to `scripts/contact.ts`, `scripts/test-contact.ts`, or `package.json`.
+- Confirmed `SLACK_URL` is unset in this sandbox (`echo $SLACK_URL` empty) and no `.env` or `.hublaunch/hublaunch.config.js` exists in this repo checkout to provision it.
+- Re-read the governing plan (`.hublaunch/plans/2026-07-14-17:30-contact-us-slack-feature.md`): FR6 explicitly mandates the hard-fail guard, and "CI wiring for the test" is explicitly listed Out of Scope. Softening the guard (e.g. skip-on-missing-SLACK_URL) would violate FR5/FR6's "no mocking the happy-path live send" requirement.
+- Conclusion unchanged: this is a pre-existing, environment-only gap (missing secret), not a regression caused by this branch's change. No code was modified in this pass either. Do not "fix" this by weakening `scripts/test-contact.ts`'s guard — that would defeat the feature's explicit purpose for everyone just to silence an unrelated harness signal.
