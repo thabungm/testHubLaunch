@@ -83,3 +83,5 @@ npm run typecheck        # tsc --noEmit, strict
 - `.env` stays uncommitted (gitignored); the webhook URL is never printed.
 - Node < 22.6 cannot run `.ts` directly — use the `npm run` scripts (which use
   `tsx`) or `npx tsx scripts/...`.
+
+<!-- hula-e2e e2e-28eb54a-1359 e2e-28eb54a-c2 -->
