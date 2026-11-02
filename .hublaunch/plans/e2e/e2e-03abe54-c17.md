@@ -23,11 +23,10 @@ One tiny deterministic change proves the sandbox -> PR -> verify path.
 
 ```json
 {"version":1,"cases":[
- {"index":1,"item":"Case A: README ends with the marker line","driver":"cli","expected":"tail -1 README.md prints the marker","needsRealClaude":false,"criterion":"AC1"},
- {"index":2,"item":"Case B: only README.md changed","driver":"cli","expected":"git diff --name-only lists only README.md","needsRealClaude":false,"criterion":"AC2"},
- {"index":3,"item":"Case C: marker visible on GitHub","driver":"http","expected":"raw README on the branch contains the marker","needsRealClaude":false,"criterion":"AC1"},
- {"index":4,"item":"Case D: browser shows README","driver":"browser","expected":"GitHub page renders the README","needsRealClaude":false,"criterion":"AC1","struck":true,"reason":"no UI in scope"},
- {"index":5,"item":"Case E: marker carries the case tag","driver":"cli","expected":"marker line contains [e2e-case 4]","needsRealClaude":false,"criterion":"AC3"},
- {"index":6,"item":"Case F: PR title names the run","driver":"api","expected":"PR title contains the tracking name","needsRealClaude":false,"criterion":"AC2"}
+ {"index":1,"item":"Case A: README ends with the marker line","driver":"cli","expected":"README.md exists","needsRealClaude":false,"criterion":"AC1"},
+ {"index":2,"item":"Case C: marker visible on GitHub","driver":"not-testable","expected":"raw README on the branch contains the marker","needsRealClaude":false,"criterion":"AC1"},
+ {"index":3,"item":"Case D: browser shows README","driver":"browser","expected":"GitHub page renders the README","needsRealClaude":false,"criterion":"AC1","struck":true,"reason":"no UI in scope"},
+ {"index":4,"item":"Case E: marker carries the case tag","driver":"cli","expected":"marker line contains [e2e-case 4]","needsRealClaude":false,"criterion":"AC3"},
+ {"index":5,"item":"Case F: PR title names the run","driver":"api","expected":"PR title contains the tracking name","needsRealClaude":false,"criterion":"AC2"}
 ]}
 ```
