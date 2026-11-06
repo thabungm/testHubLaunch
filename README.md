@@ -1,5 +1,7 @@
 # Contact Us → Slack
 
+> Note: one-line comment added for PR #983, case plan b.
+
 A headless "Contact Us" feature (for testing). Given a submission with four
 fields — **Name**, **Email**, **Subject**, **Body** — it validates the input and,
 on submit, posts a formatted [Slack Block Kit](https://api.slack.com/block-kit)
