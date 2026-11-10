@@ -24,3 +24,6 @@ This file persists context across agent sessions. Update it as you work.
 
 ## Next Steps
 - Done. No further action.
+
+## Follow-up (re-check)
+- Re-invoked for the same rule id (`commit-messages-follow-a-short-imperative-summar-1jnt3y`) citing offending hash `2ae48f8` — that hash no longer exists; it was the pre-amend hash of the "feat" commit, superseded when attempt 1's amend rewrote history to `a8380d4`/`c6ab1d9`. Verified both current top commits (`c6ab1d9 fix: style violations (attempt 1)` and `a8380d4 feat: ...`) already carry `Co-Authored-By: Claude Sonnet 5 <noreply@anthropic.com>`. No new commit needed; working tree clean.
