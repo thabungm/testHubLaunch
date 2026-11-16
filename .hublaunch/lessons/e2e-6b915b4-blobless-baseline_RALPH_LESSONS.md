@@ -29,6 +29,11 @@ This file persists context across agent sessions. Update it as you work.
 - `npm run build`: exit 0
 - `npm run test:contact`: exit 1 (SLACK_URL not set in sandbox; fails at the env check before any project code runs)
 
+## Style Fix (commit-messages-carry-ai-assistance-attribution)
+- Flagged: only 2968714 carries a Co-Authored-By trailer; harness-generated commits (0e5f6c6, 0bc63c8, 010dd32) have none.
+- Action: no history rewrite. Those commits are already pushed to origin/e2e-6b915b4-blobless-baseline and are harness-owned, so amending them would need a force-push. Any commit made by the agent from here on ends with `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`.
+- No source files changed for this fix.
+
 ## Open Questions
 - None
 
