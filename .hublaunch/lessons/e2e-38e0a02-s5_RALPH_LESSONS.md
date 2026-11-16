@@ -59,3 +59,7 @@ This file persists context across agent sessions. Update it as you work.
 ## Regression Fix Attempt 4: test:contact (still environmental)
 - Re-ran: identical "FAIL: SLACK_URL not set". `git diff` of contact.ts / test-contact.ts across all my commits is empty.
 - No code change made. The live test needs a real `SLACK_URL`; I will not fake it or make the test skip.
+
+## Regression Fix Attempt 5: test:contact (still environmental)
+- Re-ran: identical "FAIL: SLACK_URL not set"; SLACK_URL empty. contact.ts / test-contact.ts unchanged since b773d42.
+- No code change made. The test is a live Slack check and can only pass with a real `SLACK_URL` in the environment.
