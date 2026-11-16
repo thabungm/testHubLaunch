@@ -36,3 +36,12 @@ This file persists context across agent sessions. Update it as you work.
 
 ## Next Steps
 - None required. When opening a PR, include the plan's "Departures from the request" sentence in the PR body.
+
+## Regression Fix Attempt: test:contact
+- Failure: `npm run test:contact` -> "FAIL: SLACK_URL not set — cannot run live test" (exit 1).
+- Cause: environmental, NOT a code regression. test-contact.ts is a live test that posts to Slack and requires
+  `SLACK_URL`, which is absent in this sandbox. My diff touches only greet.ts, test-greet.ts, package.json
+  (+2 scripts), README.md; nothing in contact.ts / test-contact.ts. The same failure occurs without my changes.
+- Not done on purpose: did not fake a SLACK_URL (would send/pretend a real Slack message) and did not make the
+  test skip when the variable is missing (would weaken the regression check).
+- To get it green: run with a real `SLACK_URL` (e.g. `SLACK_URL=<webhook> npm run test:contact`).
