@@ -40,3 +40,9 @@ This file persists context across agent sessions. Update it as you work.
 - eb55121, 719004b, a7f5fd3 are on origin/e2e-835d274-smoke (81d73c8 is local only). The only way to add trailers to them is a rebase plus `git push --force-with-lease`. I did NOT do that, because it rewrites published history and wasn't authorized.
 - No code change was needed. Every new commit on this branch carries the trailer.
 - To close the gate: a human approves the history rewrite, or the rule is waived for the harness-created commits.
+
+## Style Fix (third pass): AI-assistance disclosure
+- Re-checked `git log main..HEAD`: eb55121, 719004b, a7f5fd3 and 35f533d (the "attempt 2" commit, empty body) still lack a `Co-Authored-By` trailer. 15fa590 and 81d73c8 have one.
+- Still not rewriting history: eb55121, 719004b and a7f5fd3 are published on origin/e2e-835d274-smoke, so adding trailers needs a rebase plus force-push. That needs explicit human approval.
+- What changed this pass: only this note, committed with the trailer. No source files touched.
+- To close the gate: a human approves `git rebase` + `git push --force-with-lease` to add trailers to the older commits, or the rule is waived for harness-created commits.
