@@ -39,6 +39,11 @@ This file persists context across agent sessions. Update it as you work.
 - Action: the attempt-2 commit ends with `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`. Every agent-authored commit from now on must carry it, including fix commits.
 - Only this lessons file changed.
 
+### Attempt 3
+- `git log -4` showed a4b9c4e (agent-authored, unpushed) still had no trailer. Reworded it locally with a non-interactive rebase, so it is now bb3ed55 and carries `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`. Only the two local unpushed fix commits were rewritten. Nothing on origin was touched and no force-push is needed.
+- 0bc63c8 and 010dd32 are harness-generated and already on origin. They stay without the trailer, because amending them needs a force-push.
+- This attempt's commit carries the trailer too. Only this lessons file changed.
+
 ## Open Questions
 - None
 
