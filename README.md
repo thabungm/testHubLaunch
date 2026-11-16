@@ -83,3 +83,15 @@ npm run typecheck        # tsc --noEmit, strict
 - `.env` stays uncommitted (gitignored); the webhook URL is never printed.
 - Node < 22.6 cannot run `.ts` directly — use the `npm run` scripts (which use
   `tsx`) or `npx tsx scripts/...`.
+
+## Greeting helper (separate utility)
+
+`scripts/greet.ts` is a tiny standalone helper, unrelated to the Contact Us
+feature: `greet(name?)` returns `Hello, <name>!`, or `Hello, there!` when the
+name is blank or missing. Run it with `npm run greet -- <name>`; add `--silent`
+to print only the greeting line.
+
+```bash
+npm run --silent greet -- Sam   # prints: Hello, Sam!
+npm run test:greet              # offline test — no SLACK_URL needed
+```
