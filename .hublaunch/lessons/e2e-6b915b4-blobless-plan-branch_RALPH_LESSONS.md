@@ -4,7 +4,7 @@ This file persists context across agent sessions. Update it as you work.
 
 ## Current Status
 - Phase: COMPLETE
-- Last action: Committed 7134f89 "chore: add hula-e2e marker to README" (README.md only, +1 line)
+- Last action: Style fix — added a commit carrying the Co-Authored-By trailer (see "Style Fixes"). Earlier: committed 7134f89 "chore: add hula-e2e marker to README" (README.md only, +1 line)
 - Blockers: None for the plan. Live Slack half of `npm run test:contact` cannot run in sandbox (SLACK_URL unset).
 
 ## Key Discoveries
@@ -28,7 +28,14 @@ This file persists context across agent sessions. Update it as you work.
 
 ## Files Modified
 - README.md (committed in 7134f89)
-- .hublaunch/lessons/e2e-6b915b4-blobless-plan-branch_RALPH_LESSONS.md (this file; intentionally uncommitted)
+- .hublaunch/lessons/e2e-6b915b4-blobless-plan-branch_RALPH_LESSONS.md (this file; committed in the style-fix commit)
+
+## Style Fixes
+- Rule `commit-messages-carry-ai-assistance-attribution--1ud7p1s`: 7134f89 has the trailer; 0f871f9 and ee1c6eb
+  (harness-generated) do not. Those are already pushed to origin, so I did NOT rewrite/force-push them.
+- Fix: added a new commit (this lessons update) whose message ends with a `Co-Authored-By:` trailer, so HEAD
+  conforms. No source code changed; behaviour is unaffected.
+- Going forward: every commit I author must end with the Co-Authored-By trailer.
 
 ## Open Questions
 - None.
