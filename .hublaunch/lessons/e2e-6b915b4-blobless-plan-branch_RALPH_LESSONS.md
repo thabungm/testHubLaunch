@@ -42,8 +42,14 @@ This file persists context across agent sessions. Update it as you work.
   pushed harness commits, which I did not do without explicit approval. Needs a human/harness decision (or an
   exemption for harness-generated commits in the rule).
 
+- Flagged again (attempt 3, same rule). Current state via `git log -1 --format=%B <sha> | grep -ci co-authored`:
+  7134f89 and 416a575 carry the trailer; 0f871f9, ee1c6eb (harness-generated) and ac7a9fe
+  ("fix: style violations (attempt 2)", harness-made) do not. No code at any file:line to refactor.
+  Still not rewriting pushed history. I made no commit this time; any commit I author must end with the trailer.
+
 ## Open Questions
-- None.
+- Should harness-generated commits (0f871f9, ee1c6eb, ac7a9fe) be exempt from the attribution rule, or should
+  the harness add the trailer when it creates them? This cannot be resolved by an in-scope code change.
 
 ## Next Steps
 - None — plan complete. Push/PR left to the HubLaunch harness.
