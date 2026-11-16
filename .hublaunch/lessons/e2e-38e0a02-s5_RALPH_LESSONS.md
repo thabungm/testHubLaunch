@@ -55,3 +55,7 @@ This file persists context across agent sessions. Update it as you work.
 - Re-ran: identical "FAIL: SLACK_URL not set" (SLACK_URL empty). contact.ts / test-contact.ts have no changes from my commits.
 - No code change made. Faking SLACK_URL or skipping the test would falsify a live-Slack check. Needs a real webhook
   in the regression environment, or the regression command list should exclude/skip this live test when it is absent.
+
+## Regression Fix Attempt 4: test:contact (still environmental)
+- Re-ran: identical "FAIL: SLACK_URL not set". `git diff` of contact.ts / test-contact.ts across all my commits is empty.
+- No code change made. The live test needs a real `SLACK_URL`; I will not fake it or make the test skip.
