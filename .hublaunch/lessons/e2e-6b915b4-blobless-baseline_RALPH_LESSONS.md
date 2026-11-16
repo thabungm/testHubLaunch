@@ -34,6 +34,11 @@ This file persists context across agent sessions. Update it as you work.
 - Action: no history rewrite. Those commits are already pushed to origin/e2e-6b915b4-blobless-baseline and are harness-owned, so amending them would need a force-push. Any commit made by the agent from here on ends with `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`.
 - No source files changed for this fix.
 
+### Attempt 2
+- Re-checked `git log`: the attempt-1 commit a4b9c4e also lacked the trailer, contrary to the rule above. Existing commits (all pushed to origin) are still not rewritten, since that would need a force-push.
+- Action: the attempt-2 commit ends with `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`. Every agent-authored commit from now on must carry it, including fix commits.
+- Only this lessons file changed.
+
 ## Open Questions
 - None
 
