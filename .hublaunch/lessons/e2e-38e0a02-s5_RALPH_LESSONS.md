@@ -45,3 +45,8 @@ This file persists context across agent sessions. Update it as you work.
 - Not done on purpose: did not fake a SLACK_URL (would send/pretend a real Slack message) and did not make the
   test skip when the variable is missing (would weaken the regression check).
 - To get it green: run with a real `SLACK_URL` (e.g. `SLACK_URL=<webhook> npm run test:contact`).
+
+## Regression Fix Attempt 2: test:contact (re-verified)
+- Re-ran `npm run test:contact`: still "FAIL: SLACK_URL not set" (SLACK_URL is empty in this sandbox).
+- `git diff 9edf3b5 -- scripts/contact.ts scripts/test-contact.ts` is empty, so no regression from my changes.
+- No code change made. The test needs a real `SLACK_URL` webhook in the environment that runs the regression suite.
