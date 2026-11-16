@@ -36,6 +36,11 @@ This file persists context across agent sessions. Update it as you work.
 - Fix: added a new commit (this lessons update) whose message ends with a `Co-Authored-By:` trailer, so HEAD
   conforms. No source code changed; behaviour is unaffected.
 - Going forward: every commit I author must end with the Co-Authored-By trailer.
+- Re-flagged on a later gate run (same rule): 7134f89 and 416a575 carry the trailer; 0f871f9 and ee1c6eb
+  (harness-generated, already pushed) still do not. Re-checked with `git log -1 --format=%B <sha> | grep -ci co-authored`.
+  No code to refactor and no new commit made; fixing those two would need a history rewrite + force-push of
+  pushed harness commits, which I did not do without explicit approval. Needs a human/harness decision (or an
+  exemption for harness-generated commits in the rule).
 
 ## Open Questions
 - None.
